@@ -100,15 +100,24 @@ const Cobro = {
         if (!lista) return;
         
         if (this.pagos.length === 0) {
-            lista.innerHTML = `
+            const total = Carrito.getTotal();
+            
+            lista.innerHTML = total === 0 ? `
+                <div style="text-align: center; color: var(--success); padding: 20px; font-size: 12px; border: 1px dashed var(--success); border-radius: var(--radius);">
+                    <i class="fas fa-gift"></i> 100% Descuento<br>
+                    <small>No requiere pago</small>
+                </div>
+            ` : `
                 <div style="text-align: center; color: var(--gray-400); padding: 20px; font-size: 12px; border: 1px dashed var(--gray-200); border-radius: var(--radius);">
                     No hay pagos registrados aún<br>
                     <small>Agregue un método de pago para continuar</small>
                 </div>
             `;
             if (recibidoEl) recibidoEl.textContent = '$0.00 MXN';
-            if (btnConfirmar) btnConfirmar.disabled = true;
+            // Si total es 0, habilitar botón aunque no haya pagos
+            if (btnConfirmar) btnConfirmar.disabled = total > 0;
             if (cambioSection) cambioSection.style.display = 'none';
+            if (pendienteEl) pendienteEl.textContent = total === 0 ? '$0.00 MXN' : `$${total.toFixed(2)} MXN`;
             return;
         }
         
@@ -173,17 +182,8 @@ const Cobro = {
         const cliente = Clientes.seleccionado;
         const grupoCliente = cliente ? cliente.grupo : '';
         
-        console.log('=== calcularDescuentoAutomatico ===');
-        console.log('grupoCliente:', grupoCliente);
-        console.log('metodoSeleccionado:', this.metodoSeleccionado);
-        
         try {
             const result = await API.calcularDescuento(grupoCliente, this.metodoSeleccionado);
-            
-            console.log('API result:', result);
-            console.log('result.id:', result.id);
-            console.log('result.porcentaje:', result.porcentaje);
-            console.log('result.descripcion:', result.descripcion);
             
             const activoEl = document.getElementById('cobro-descuento-activo');
             const nombreEl = document.getElementById('cobro-descuento-nombre');
@@ -194,26 +194,22 @@ const Cobro = {
                 if (nombreEl) nombreEl.textContent = result.descripcion;
                 if (porcentajeEl) porcentajeEl.textContent = `${result.porcentaje}%`;
                 
-                // Aplicar al carrito Y guardar tipo de descuento
                 Carrito.aplicarDescuentoAutomatico(result.porcentaje, result.descripcion, result.id);
                 Carrito.tipoDescuento = result.descripcion;
                 
-                // Guardar en Cobro también para referencia
                 this.descuentoAplicado = {
                     porcentaje: result.porcentaje,
                     descripcion: result.descripcion,
                     id: result.id
                 };
-                
-                console.log('✅ descuentoAplicado guardado:', this.descuentoAplicado);
             } else {
                 if (activoEl) activoEl.style.display = 'none';
                 Carrito.tipoDescuento = 'Ninguno';
                 this.descuentoAplicado = null;
-                console.log('❌ Sin descuento aplicado');
             }
             
             this.actualizarTotalesUI();
+            this.actualizarPagosUI(); // Actualizar UI de pagos por si total cambió a 0
             
         } catch (error) {
             console.error('Error calculando descuento:', error);
@@ -311,10 +307,6 @@ const Cobro = {
             const observaciones = document.getElementById('cobro-notas')?.value?.trim() || '';
             const cliente = Clientes.seleccionado;
             
-            console.log('=== PROCESANDO VENTA ===');
-            console.log('this.descuentoAplicado:', this.descuentoAplicado);
-            console.log('TipoDescuento a enviar:', this.descuentoAplicado ? this.descuentoAplicado.id : '');
-            
             const ventaData = {
                 IdVenta: idVenta,
                 Sucursal: Auth.getSucursal(),
@@ -327,8 +319,6 @@ const Cobro = {
                 GrupoCliente: cliente ? cliente.grupo : '',
                 TurnoId: Turno.getId()
             };
-            
-            console.log('ventaData completa:', ventaData);
             
             const detalles = Carrito.items.map((item, index) => {
                 const subtotal = item.precio * item.cantidad;
