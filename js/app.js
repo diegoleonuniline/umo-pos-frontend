@@ -166,6 +166,11 @@ function abrirModalClientes() {
     const lista = document.getElementById('clientes-lista');
     const searchInput = document.getElementById('search-cliente');
     
+    if (!modal || !lista) {
+        console.error('Modal clientes no encontrado');
+        return;
+    }
+    
     // Renderizar lista inicial
     renderizarListaClientes(Clientes.lista.slice(0, 20));
     
@@ -194,11 +199,15 @@ function abrirModalClientes() {
 
 function renderizarListaClientes(clientes) {
     const lista = document.getElementById('clientes-lista');
+    if (!lista) {
+        console.error('Elemento clientes-lista no encontrado');
+        return;
+    }
     
     let html = `
         <div class="cliente-item" onclick="seleccionarCliente(null)">
-            <i class="fas fa-user-slash"></i>
-            <div>
+            <div class="cliente-icon"><i class="fas fa-user-slash"></i></div>
+            <div class="cliente-data">
                 <strong>Cliente General</strong>
                 <small>Sin datos de cliente</small>
             </div>
@@ -208,8 +217,8 @@ function renderizarListaClientes(clientes) {
     clientes.forEach(c => {
         html += `
             <div class="cliente-item" onclick="seleccionarCliente('${c.codigo}')">
-                <i class="fas fa-user"></i>
-                <div>
+                <div class="cliente-icon"><i class="fas fa-user"></i></div>
+                <div class="cliente-data">
                     <strong>${c.nombre}</strong>
                     <small>${c.correo || ''} ${c.telefono ? '• ' + c.telefono : ''} ${c.grupo ? '• ' + c.grupo : ''}</small>
                 </div>
