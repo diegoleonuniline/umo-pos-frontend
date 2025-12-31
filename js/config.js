@@ -3,7 +3,7 @@
 // ============================================
 
 const CONFIG = {
-    // URL del backend en Heroku
+    // URL del backend en Heroku (SIN slash al final)
     API_URL: 'https://umo-pos-api-71a155958263.herokuapp.com',
     
     // Logo UMO
