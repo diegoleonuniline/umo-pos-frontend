@@ -23,6 +23,11 @@ const Auth = {
         
         if (result.success) {
             this.usuario = result.usuario;
+            // Debug: ver estructura del usuario
+            console.log('Usuario logueado:', this.usuario);
+            console.log('ID Empleado:', this.getId());
+            console.log('Nombre:', this.getNombre());
+            console.log('Sucursal:', this.getSucursal());
             localStorage.setItem('umo_sesion', JSON.stringify(this.usuario));
         }
         
@@ -52,19 +57,24 @@ const Auth = {
     },
     
     getId() {
-        return this.usuario?.id || this.usuario?.empleadoId || null;
+        // Campo de AppSheet es "ID Empleado"
+        return this.usuario?.['ID Empleado'] || this.usuario?.id || this.usuario?.empleadoId || null;
     },
     
     getOdooId() {
-        return this.usuario?.odooId || this.usuario?.odoo_id || this.usuario?.id || null;
+        return this.usuario?.['ID Empleado'] || this.usuario?.odooId || this.usuario?.id || null;
+    },
+    
+    getEmpleadoId() {
+        return this.usuario?.['ID Empleado'] || null;
     },
     
     getNombre() {
-        return this.usuario?.nombre || 'Usuario';
+        return this.usuario?.nombre || this.usuario?.['Nombre de Usuario'] || this.usuario?.['Nombre Completo'] || 'Usuario';
     },
     
     getSucursal() {
-        return this.usuario?.sucursal || 'Principal';
+        return this.usuario?.sucursal || this.usuario?.['Sucursal'] || 'Principal';
     },
     
     getInitials() {
