@@ -2,13 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UMO - Punto de Venta</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png">
 </head>
 <body>
 
@@ -16,7 +15,9 @@
     <div id="login-screen" class="screen login-screen">
         <div class="login-card">
             <div class="login-header">
-                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="logo-img">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
                 <h1>UMO</h1>
                 <p>Sistema Punto de Venta</p>
             </div>
@@ -41,14 +42,16 @@
                     <div class="spinner"></div>
                 </button>
             </form>
-            <footer class="login-footer">© 2025 UMO POS</footer>
+            <footer>© 2025 UMO POS</footer>
         </div>
     </div>
 
     <!-- ========== PANTALLA LOADING ========== -->
     <div id="loading-screen" class="screen loading-screen" style="display:none">
         <div class="loading-content">
-            <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="loading-logo">
+            <div class="logo-icon">
+                <i class="fas fa-store"></i>
+            </div>
             <h1>UMO</h1>
             <div class="loader"></div>
             <p>Cargando datos...</p>
@@ -59,16 +62,16 @@
     <div id="turno-screen" class="screen turno-screen" style="display:none">
         <div class="turno-card">
             <div class="turno-header">
-                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="turno-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
                 <h1>Abrir Turno</h1>
                 <p>Ingresa los datos para iniciar tu turno</p>
             </div>
             
             <div class="turno-user-info">
-                <div class="turno-user-avatar">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="turno-user-details">
+                <i class="fas fa-user-circle"></i>
+                <div>
                     <strong id="turno-usuario-nombre">Usuario</strong>
                     <small id="turno-usuario-sucursal">Sucursal</small>
                 </div>
@@ -76,7 +79,7 @@
 
             <form id="turno-form" class="turno-form">
                 <div class="turno-section">
-                    <h3><i class="fas fa-coins"></i> Efectivo Inicial</h3>
+                    <h3><i class="fas fa-dollar-sign"></i> Efectivo Inicial</h3>
                     <div class="turno-grid">
                         <div class="field">
                             <label>MXN (Pesos)</label>
@@ -110,28 +113,19 @@
                 </div>
 
                 <div class="turno-section">
-                    <h3><i class="fas fa-exchange-alt"></i> Tasas de Cambio (1 unidad = MXN)</h3>
-                    <div class="turno-grid three-cols">
+                    <h3><i class="fas fa-exchange-alt"></i> Tasas de Cambio</h3>
+                    <div class="turno-grid">
                         <div class="field">
-                            <label>1 USD =</label>
-                            <div class="input-money">
-                                <span>$</span>
-                                <input type="number" id="turno-tasa-usd" value="17.50" min="0" step="0.01">
-                            </div>
+                            <label>1 USD = MXN</label>
+                            <input type="number" id="turno-tasa-usd" value="17.50" min="0" step="0.01">
                         </div>
                         <div class="field">
-                            <label>1 CAD =</label>
-                            <div class="input-money">
-                                <span>$</span>
-                                <input type="number" id="turno-tasa-cad" value="13.00" min="0" step="0.01">
-                            </div>
+                            <label>1 CAD = MXN</label>
+                            <input type="number" id="turno-tasa-cad" value="13.00" min="0" step="0.01">
                         </div>
                         <div class="field">
-                            <label>1 EUR =</label>
-                            <div class="input-money">
-                                <span>€</span>
-                                <input type="number" id="turno-tasa-eur" value="19.00" min="0" step="0.01">
-                            </div>
+                            <label>1 EUR = MXN</label>
+                            <input type="number" id="turno-tasa-eur" value="19.00" min="0" step="0.01">
                         </div>
                     </div>
                 </div>
@@ -140,7 +134,7 @@
                 
                 <div class="turno-actions">
                     <button type="button" class="btn btn-outline" onclick="cerrarSesion()">
-                        <i class="fas fa-sign-out-alt"></i> Salir
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                     </button>
                     <button type="submit" id="turno-btn" class="btn btn-success">
                         <i class="fas fa-play"></i>
@@ -152,260 +146,133 @@
         </div>
     </div>
 
-    <!-- ========== APP PRINCIPAL - LAYOUT CAFI ========== -->
+    <!-- ========== APP PRINCIPAL ========== -->
     <div id="app" class="app" style="display:none">
         
         <!-- HEADER -->
         <header class="header">
             <div class="header-left">
                 <div class="logo">
-                    <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO">
+                    <div class="logo-icon small">
+                        <i class="fas fa-store"></i>
+                    </div>
                     <span>UMO</span>
                 </div>
-                <div class="turno-badge">
-                    <span class="status-dot"></span>
+                <div class="turno-status">
+                    <i class="fas fa-clock"></i>
                     <span>Turno: <strong id="header-turno-id">-</strong></span>
                 </div>
             </div>
             
             <div class="header-center">
                 <div class="tasas-display">
-                    <div class="tasa-item">
-                        <span class="tasa-label">USD</span>
-                        <span class="tasa-value">$<span id="header-tasa-usd">17.50</span></span>
-                    </div>
-                    <div class="tasa-item">
-                        <span class="tasa-label">CAD</span>
-                        <span class="tasa-value">$<span id="header-tasa-cad">13.00</span></span>
-                    </div>
-                    <div class="tasa-item">
-                        <span class="tasa-label">EUR</span>
-                        <span class="tasa-value">€<span id="header-tasa-eur">19.00</span></span>
-                    </div>
+                    <span><strong>USD:</strong> $<span id="header-tasa-usd">17.50</span></span>
+                    <span><strong>CAD:</strong> $<span id="header-tasa-cad">13.00</span></span>
+                    <span><strong>EUR:</strong> €<span id="header-tasa-eur">19.00</span></span>
                 </div>
             </div>
             
             <div class="header-right">
-                <div class="user-info">
-                    <div class="user-avatar" id="user-avatar">US</div>
-                    <div class="user-details">
-                        <span class="user-name" id="user-name">Usuario</span>
-                        <small class="user-sucursal" id="user-sucursal">Sucursal</small>
+                <div class="user-pill" id="user-pill">
+                    <div class="avatar" id="user-avatar">US</div>
+                    <div class="user-text">
+                        <span id="user-name">Usuario</span>
+                        <small id="user-sucursal">Sucursal</small>
                     </div>
                 </div>
                 <button class="btn-icon" onclick="abrirModalCerrarTurno()" title="Cerrar Turno">
                     <i class="fas fa-cash-register"></i>
                 </button>
-                <button class="btn-icon btn-danger" onclick="cerrarSesion()" title="Cerrar Sesión">
+                <button class="btn-icon danger" onclick="cerrarSesion()" title="Cerrar Sesión">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
             </div>
         </header>
 
-        <!-- CONTENIDO PRINCIPAL - 2 COLUMNAS -->
+        <!-- CONTENIDO PRINCIPAL -->
         <main class="main-content">
             
-            <!-- PANEL IZQUIERDO: CARRITO -->
+            <!-- PANEL IZQUIERDO: PRODUCTOS -->
+            <section class="panel-products">
+                <div class="section-header">
+                    <h2><i class="fas fa-boxes"></i> Productos</h2>
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-producto" placeholder="Buscar por código o nombre...">
+                    </div>
+                </div>
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="productos-tbody">
+                            <tr>
+                                <td colspan="5" class="loading-cell">
+                                    <div class="loader small"></div>
+                                    <span>Cargando productos...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PANEL DERECHO: CARRITO -->
             <section class="panel-cart">
-                
-                <!-- BARRA DE VENTA (Cliente) -->
-                <div class="sale-bar">
-                    <div class="sale-client" onclick="abrirModalClientes()">
-                        <i class="fas fa-user-circle"></i>
-                        <div class="sale-client-info">
-                            <small>CLIENTE</small>
-                            <strong id="cliente-nombre">Público General</strong>
-                        </div>
+                <div class="section-header">
+                    <h2><i class="fas fa-shopping-cart"></i> Venta Actual</h2>
+                    <div class="cliente-selector" onclick="abrirModalClientes()">
+                        <i class="fas fa-user"></i>
+                        <span id="cliente-nombre">Cliente General</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
-                    <div class="sale-grupo" id="cliente-info" style="display:none">
-                        <span class="badge-grupo" id="cliente-grupo"></span>
+                </div>
+
+                <div class="cart-items" id="cart-items">
+                    <div class="cart-empty">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Carrito vacío</p>
+                        <small>Agrega productos para comenzar</small>
                     </div>
                 </div>
-                
-                <!-- BARRA DE BÚSQUEDA -->
-                <div class="search-bar">
-                    <div class="search-input-wrapper">
-                        <i class="fas fa-barcode"></i>
-                        <input type="text" id="search-producto" placeholder="Escanea código o busca producto..." autofocus>
-                    </div>
-                    <button class="btn btn-primary" onclick="focusBusqueda()" title="Buscar producto (F2)">
-                        <i class="fas fa-search"></i>
-                        <span>Buscar</span>
-                        <kbd>F2</kbd>
-                    </button>
-                </div>
-                
-                <!-- TABLA CARRITO -->
-                <div class="cart-wrapper">
-                    <div class="cart-items" id="cart-items">
-                        <div class="cart-empty">
-                            <i class="fas fa-shopping-cart"></i>
-                            <p>Escanea o busca productos para agregar</p>
-                            <small>Usa el lector de códigos o presiona <kbd>F2</kbd></small>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- RESUMEN CARRITO -->
+
                 <div class="cart-summary" id="cart-summary" style="display:none">
                     <div class="summary-row">
                         <span>Subtotal:</span>
-                        <span id="cart-subtotal">$0</span>
+                        <span id="cart-subtotal">$0.00</span>
                     </div>
                     <div class="summary-row discount">
                         <span>Descuento:</span>
-                        <span id="cart-descuento">-$0</span>
+                        <span id="cart-descuento">-$0.00</span>
                     </div>
                     <div class="summary-row total">
                         <span>TOTAL:</span>
-                        <span id="cart-total">$0</span>
+                        <span id="cart-total">$0.00</span>
                     </div>
                 </div>
-                
-                <!-- ACCIONES CARRITO -->
+
                 <div class="cart-actions">
-                    <button class="btn btn-outline" onclick="limpiarCarrito()" title="Limpiar carrito (F4)">
-                        <i class="fas fa-trash"></i>
-                        <span>Limpiar</span>
-                        <kbd>F4</kbd>
+                    <button class="btn btn-outline" onclick="limpiarCarrito()">
+                        <i class="fas fa-trash"></i> Limpiar
                     </button>
-                    <button class="btn btn-success btn-lg" onclick="abrirModalCobro()" id="btn-cobrar" disabled title="Cobrar (F12)">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Cobrar</span>
-                        <kbd>F12</kbd>
+                    <button class="btn btn-success btn-lg" onclick="abrirModalCobro()" id="btn-cobrar" disabled>
+                        <i class="fas fa-cash-register"></i> Cobrar
                     </button>
                 </div>
             </section>
-            
-            <!-- PANEL DERECHO: RESUMEN/TOTAL -->
-            <aside class="panel-summary">
-                <div class="total-display">
-                    <span class="total-label">Total a Pagar</span>
-                    <span class="total-amount" id="total-display">$0.00</span>
-                </div>
-                
-                <div class="summary-section">
-                    <h4>Resumen de Venta</h4>
-                    <div class="summary-info">
-                        <div class="info-row">
-                            <span>Artículos</span>
-                            <span id="resumen-articulos">0</span>
-                        </div>
-                        <div class="info-row">
-                            <span>Subtotal</span>
-                            <span id="resumen-subtotal">$0.00</span>
-                        </div>
-                        <div class="info-row discount">
-                            <span>Descuentos</span>
-                            <span id="resumen-descuentos">-$0.00</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="summary-section ticket-preview">
-                    <div class="ticket-row">
-                        <i class="fas fa-user"></i>
-                        <div>
-                            <span>Cliente</span>
-                            <strong id="resumen-cliente">Público General</strong>
-                        </div>
-                    </div>
-                    <div class="ticket-row">
-                        <i class="fas fa-store"></i>
-                        <div>
-                            <span>Sucursal</span>
-                            <strong id="resumen-sucursal">-</strong>
-                        </div>
-                    </div>
-                    <div class="ticket-row">
-                        <i class="fas fa-user-tag"></i>
-                        <div>
-                            <span>Vendedor</span>
-                            <strong id="resumen-vendedor">-</strong>
-                        </div>
-                    </div>
-                </div>
-                
-            </aside>
         </main>
-        
-        <!-- SHORTCUTS BAR -->
-        <div class="shortcuts-bar">
-            <span><kbd>F2</kbd> Buscar</span>
-            <span><kbd>F4</kbd> Limpiar</span>
-            <span><kbd>F12</kbd> Cobrar</span>
-            <span><kbd>Esc</kbd> Cerrar</span>
-            <span><kbd>Ctrl+N</kbd> Nueva Venta</span>
-        </div>
-    </div>
-
-    <!-- PRODUCTOS TBODY OCULTO (para compatibilidad con productos.js) -->
-    <div style="display:none">
-        <table><tbody id="productos-tbody"></tbody></table>
-    </div>
-
-    <!-- ========== MODAL: CLIENTES ========== -->
-    <div id="modal-clientes" class="modal-overlay">
-        <div class="modal modal-md">
-            <div class="modal-header">
-                <h3><i class="fas fa-users"></i> Seleccionar Cliente</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-clientes')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="search-box mb-15">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="search-cliente" placeholder="Buscar por nombre, código, correo...">
-                </div>
-                
-                <div class="clientes-lista" id="clientes-lista">
-                    <div class="cliente-item" onclick="Clientes.seleccionar(null)">
-                        <div class="cliente-icon"><i class="fas fa-user-slash"></i></div>
-                        <div class="cliente-data">
-                            <strong>Cliente General</strong>
-                            <small>Sin datos de cliente</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="modal-divider">
-                    <span>o crear nuevo</span>
-                </div>
-                
-                <div class="nuevo-cliente-form" id="nuevo-cliente-form">
-                    <div class="form-row">
-                        <div class="field">
-                            <label>Código *</label>
-                            <input type="text" id="nuevo-cliente-codigo" placeholder="Ej: CLI001">
-                        </div>
-                        <div class="field">
-                            <label>Nombre *</label>
-                            <input type="text" id="nuevo-cliente-nombre" placeholder="Nombre completo">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="field">
-                            <label>Correo</label>
-                            <input type="email" id="nuevo-cliente-correo" placeholder="correo@ejemplo.com">
-                        </div>
-                        <div class="field">
-                            <label>Teléfono</label>
-                            <input type="tel" id="nuevo-cliente-telefono" placeholder="10 dígitos">
-                        </div>
-                    </div>
-                    <button class="btn btn-success btn-block" onclick="Clientes.crearNuevo()">
-                        <i class="fas fa-plus"></i> Crear Cliente
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- ========== MODAL: COBRO ========== -->
     <div id="modal-cobro" class="modal-overlay">
-        <div class="modal modal-xl">
+        <div class="modal modal-lg">
             <div class="modal-header gradient">
                 <h3><i class="fas fa-cash-register"></i> Procesar Cobro</h3>
                 <button class="btn-close" onclick="cerrarModal('modal-cobro')">
@@ -413,7 +280,7 @@
                 </button>
             </div>
             <div class="modal-body" id="modal-cobro-body">
-                <!-- Se llena dinámicamente por cobro.js -->
+                <!-- Se llena dinámicamente -->
             </div>
         </div>
     </div>
@@ -422,38 +289,56 @@
     <div id="modal-cerrar-turno" class="modal-overlay">
         <div class="modal modal-lg">
             <div class="modal-header danger">
-                <h3><i class="fas fa-lock"></i> Cerrar Turno</h3>
+                <h3><i class="fas fa-cash-register"></i> Cerrar Turno - Corte de Caja</h3>
                 <button class="btn-close" onclick="cerrarModal('modal-cerrar-turno')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body" id="modal-cerrar-turno-body">
-                <!-- Se llena dinámicamente por turno.js -->
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: CLIENTES ========== -->
+    <div id="modal-clientes" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> Seleccionar Cliente</h3>
+                <button class="btn-close" onclick="cerrarModal('modal-clientes')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="search-bar" style="margin-bottom: 15px;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-cliente" placeholder="Buscar cliente...">
+                </div>
+                <div class="clientes-lista" id="clientes-lista">
+                    <div class="cliente-item" onclick="seleccionarCliente(null)">
+                        <i class="fas fa-user-slash"></i>
+                        <div>
+                            <strong>Cliente General</strong>
+                            <small>Sin datos de cliente</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- ========== MODAL: ÉXITO ========== -->
     <div id="modal-exito" class="modal-overlay">
-        <div class="modal modal-sm success-modal">
+        <div class="modal modal-sm modal-success">
             <div class="success-content">
                 <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-check"></i>
                 </div>
                 <h2>¡Venta Exitosa!</h2>
                 <div class="success-details">
-                    <div class="detail-row">
-                        <span>Ticket:</span>
-                        <strong id="exito-ticket">#0001</strong>
-                    </div>
-                    <div class="detail-row">
-                        <span>Total:</span>
-                        <strong id="exito-total">$0.00</strong>
-                    </div>
-                    <div class="detail-row cambio">
-                        <span>Cambio:</span>
-                        <strong id="exito-cambio">$0.00</strong>
-                    </div>
+                    <p>Ticket: <strong id="exito-ticket">#0001</strong></p>
+                    <p>Total: <strong id="exito-total">$0.00</strong></p>
+                    <p>Cambio: <strong id="exito-cambio">$0.00</strong></p>
                 </div>
                 <div class="success-actions">
                     <button class="btn btn-outline" onclick="imprimirTicket()">
@@ -467,63 +352,7 @@
         </div>
     </div>
 
-    <!-- ========== TICKET DE IMPRESIÓN ========== -->
-    <div id="ticket-print" class="ticket-print">
-        <div class="ticket-header">
-            <div class="ticket-logo">UMO</div>
-            <div class="ticket-title">TICKET DE VENTA</div>
-            <div class="ticket-info" id="ticket-fecha"></div>
-            <div class="ticket-info" id="ticket-hora"></div>
-        </div>
-        <div class="ticket-divider"></div>
-        <div class="ticket-data">
-            <div class="ticket-row-print">
-                <span>Venta:</span>
-                <span id="ticket-venta-id"></span>
-            </div>
-            <div class="ticket-row-print">
-                <span>Vendedor:</span>
-                <span id="ticket-vendedor"></span>
-            </div>
-            <div class="ticket-row-print">
-                <span>Sucursal:</span>
-                <span id="ticket-sucursal"></span>
-            </div>
-            <div class="ticket-row-print">
-                <span>Cliente:</span>
-                <span id="ticket-cliente"></span>
-            </div>
-        </div>
-        <div class="ticket-divider"></div>
-        <div class="ticket-items" id="ticket-items"></div>
-        <div class="ticket-divider"></div>
-        <div class="ticket-totals">
-            <div class="ticket-row-print">
-                <span>Subtotal:</span>
-                <span id="ticket-subtotal"></span>
-            </div>
-            <div class="ticket-row-print" id="ticket-descuento-row">
-                <span>Descuento:</span>
-                <span id="ticket-descuento"></span>
-            </div>
-            <div class="ticket-row-print total">
-                <span>TOTAL:</span>
-                <span id="ticket-total"></span>
-            </div>
-        </div>
-        <div class="ticket-divider"></div>
-        <div class="ticket-pagos" id="ticket-pagos"></div>
-        <div class="ticket-row-print" id="ticket-cambio-row" style="display:none">
-            <span><strong>CAMBIO:</strong></span>
-            <span id="ticket-cambio"><strong></strong></span>
-        </div>
-        <div class="ticket-footer">
-            <p>¡Gracias por su compra!</p>
-            <p>www.umo.mx</p>
-        </div>
-    </div>
-
-    <!-- ========== TOAST NOTIFICATIONS ========== -->
+    <!-- ========== TOAST ========== -->
     <div id="toast" class="toast"></div>
 
     <!-- SCRIPTS -->
@@ -531,11 +360,9 @@
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/turno.js"></script>
-    <script src="js/clientes.js"></script>
     <script src="js/productos.js"></script>
     <script src="js/carrito.js"></script>
     <script src="js/cobro.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/shortcuts.js"></script>
 </body>
 </html>
