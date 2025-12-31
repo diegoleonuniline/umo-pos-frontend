@@ -46,17 +46,18 @@ const Turno = {
     
     async verificar() {
         try {
-            const usuario = Auth.getNombre();
+            // Usar ID de empleado, no el nombre
+            const empleadoId = Auth.getId();
             const sucursal = Auth.getSucursal();
             
-            console.log('🔍 Verificando turno para:', { usuario, sucursal });
+            console.log('🔍 Verificando turno para:', { empleadoId, sucursal });
             
-            if (!usuario || !sucursal) {
-                console.error('No hay usuario o sucursal para verificar turno');
+            if (!empleadoId || !sucursal) {
+                console.error('No hay empleadoId o sucursal para verificar turno');
                 return false;
             }
             
-            const result = await API.verificarTurnoActivo(usuario, sucursal);
+            const result = await API.verificarTurnoActivo(empleadoId, sucursal);
             
             console.log('📦 Respuesta API turno:', result);
             
@@ -73,7 +74,6 @@ const Turno = {
             }
             
             console.log('❌ No hay turno activo');
-            // No hay turno activo, limpiar localStorage
             localStorage.removeItem(this.getStorageKey());
             this.actual = null;
             return false;
@@ -86,9 +86,9 @@ const Turno = {
     async abrir(datos) {
         try {
             const result = await API.abrirTurno({
-                usuario: Auth.getNombre(),
+                usuario: Auth.getId(),  // El ID, no el nombre
+                empleadoId: Auth.getId(),
                 sucursal: Auth.getSucursal(),
-                odooId: Auth.getOdooId(),
                 efectivoInicial: datos.mxn,
                 usdInicial: datos.usd,
                 cadInicial: datos.cad,
@@ -101,6 +101,8 @@ const Turno = {
             if (result.success) {
                 this.actual = {
                     ID: result.turnoId,
+                    Usuario: Auth.getId(),
+                    Sucursal: Auth.getSucursal(),
                     tasaUSD: datos.tasaUSD,
                     tasaCAD: datos.tasaCAD,
                     tasaEUR: datos.tasaEUR
