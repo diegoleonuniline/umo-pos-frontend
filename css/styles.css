@@ -526,13 +526,17 @@ input:focus, select:focus, textarea:focus {
     color: var(--umo-dark);
 }
 
-/* Cart Actions */
+/* Cart Actions - SIEMPRE VISIBLE */
 .cart-actions {
     display: flex;
     gap: 10px;
     padding: 15px;
     border-top: 1px solid var(--gray-100);
     background: var(--white);
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
 }
 .cart-actions .btn-outline { flex: 0 0 auto; }
 .cart-actions .btn-success { flex: 1; }
