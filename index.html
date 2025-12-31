@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <title>UMO - Punto de Venta</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png">
 </head>
 <body>
 
@@ -15,8 +16,10 @@
     <div id="login-screen" class="screen login-screen">
         <div class="login-card">
             <div class="login-header">
-                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="logo-img">
-                <h1>UMO POS</h1>
+                <div class="logo-icon">
+                    <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO">
+                </div>
+                <h1>UMO</h1>
                 <p>Sistema Punto de Venta</p>
             </div>
             <form id="login-form" class="login-form">
@@ -40,15 +43,17 @@
                     <div class="spinner"></div>
                 </button>
             </form>
-            <footer class="login-footer">© 2025 UMO POS</footer>
+            <footer>© 2025 UMO POS</footer>
         </div>
     </div>
 
     <!-- ========== PANTALLA LOADING ========== -->
     <div id="loading-screen" class="screen loading-screen" style="display:none">
         <div class="loading-content">
-            <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="loading-logo">
-            <h1>UMO POS</h1>
+            <div class="logo-icon">
+                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO">
+            </div>
+            <h1>UMO</h1>
             <div class="loader"></div>
             <p>Cargando datos...</p>
         </div>
@@ -58,7 +63,9 @@
     <div id="turno-screen" class="screen turno-screen" style="display:none">
         <div class="turno-card">
             <div class="turno-header">
-                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="turno-logo">
+                <div class="logo-icon small">
+                    <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO">
+                </div>
                 <h1>Abrir Turno</h1>
                 <p>Ingresa los datos para iniciar tu turno</p>
             </div>
@@ -158,153 +165,224 @@
         <header class="header">
             <div class="header-left">
                 <div class="logo">
-                    <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO">
+                    <div class="logo-icon tiny">
+                        <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO">
+                    </div>
                     <span>UMO</span>
                 </div>
-                <div class="turno-badge">
-                    <span class="status-dot"></span>
-                    <span>Turno: <strong id="header-turno-id">-</strong></span>
+                <div class="turno-controls">
+                    <div id="turno-indicador" class="turno-indicador activo">
+                        <i class="fas fa-clock"></i>
+                        <span>Turno: <strong id="header-turno-id">-</strong></span>
+                    </div>
                 </div>
             </div>
             
             <div class="header-center">
-                <div class="tasas-display">
-                    <div class="tasa-item">
-                        <span class="tasa-label">USD</span>
-                        <span class="tasa-value">$<span id="header-tasa-usd">17.50</span></span>
-                    </div>
-                    <div class="tasa-item">
-                        <span class="tasa-label">CAD</span>
-                        <span class="tasa-value">$<span id="header-tasa-cad">13.00</span></span>
-                    </div>
-                    <div class="tasa-item">
-                        <span class="tasa-label">EUR</span>
-                        <span class="tasa-value">€<span id="header-tasa-eur">19.00</span></span>
-                    </div>
+                <button class="hbtn" onclick="nuevaVenta()" title="Nueva venta (Ctrl+N)">
+                    <i class="fas fa-plus"></i><span>Nueva</span>
+                </button>
+                <button class="hbtn" onclick="abrirModalClientes()" title="Clientes">
+                    <i class="fas fa-users"></i><span>Clientes</span>
+                </button>
+                <button class="hbtn icon-only" onclick="sincronizarDatos()" title="Sincronizar datos">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="tasas-mini">
+                    <span class="tasa-pill">USD <strong id="header-tasa-usd">17.50</strong></span>
+                    <span class="tasa-pill">CAD <strong id="header-tasa-cad">13.00</strong></span>
+                    <span class="tasa-pill">EUR <strong id="header-tasa-eur">19.00</strong></span>
                 </div>
             </div>
             
             <div class="header-right">
-                <div class="user-info">
-                    <div class="user-avatar" id="user-avatar">US</div>
-                    <div class="user-details">
-                        <span class="user-name" id="user-name">Usuario</span>
-                        <small class="user-sucursal" id="user-sucursal">Sucursal</small>
+                <div class="user-pill">
+                    <div class="avatar" id="user-avatar">US</div>
+                    <div class="user-text">
+                        <span id="user-name">Usuario</span>
+                        <small id="user-sucursal">Sucursal</small>
                     </div>
                 </div>
-                <button class="btn-icon" onclick="abrirModalCerrarTurno()" title="Cerrar Turno">
+                <button class="hbtn icon-only" onclick="abrirModalCerrarTurno()" title="Cerrar Turno">
                     <i class="fas fa-cash-register"></i>
                 </button>
-                <button class="btn-icon btn-danger" onclick="cerrarSesion()" title="Cerrar Sesión">
+                <button class="hbtn danger icon-only" onclick="cerrarSesion()" title="Cerrar sesión">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
             </div>
         </header>
-
+        
         <!-- CONTENIDO PRINCIPAL -->
         <main class="main-content">
             
-            <!-- PANEL IZQUIERDO: PRODUCTOS -->
-            <section class="products-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-boxes"></i> Productos</h2>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="search-producto" placeholder="Buscar o escanear código...">
-                        <i class="fas fa-barcode search-icon-right"></i>
-                    </div>
-                </div>
-                <div class="products-table-container">
-                    <table class="products-table">
-                        <thead>
-                            <tr>
-                                <th>SKU</th>
-                                <th>Producto</th>
-                                <th>Precio</th>
-                                <th>Categoría</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="productos-tbody">
-                            <tr>
-                                <td colspan="5" class="loading-cell">
-                                    <div class="loader small"></div>
-                                    <span>Cargando productos...</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- PANEL DERECHO: CARRITO -->
-            <section class="cart-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-shopping-cart"></i> Venta Actual</h2>
-                </div>
+            <!-- PANEL IZQUIERDO: CARRITO -->
+            <section class="panel-cart">
                 
-                <!-- SELECTOR DE CLIENTE -->
-                <div class="customer-section">
-                    <div class="customer-header">
-                        <i class="fas fa-user"></i>
-                        <span>Cliente</span>
-                    </div>
-                    <div class="customer-selector" id="cliente-nombre" onclick="abrirModalClientes()">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Seleccionar Cliente</span>
+                <!-- BARRA DE VENTA -->
+                <div class="sale-bar">
+                    <div class="sale-client" onclick="abrirModalClientes()">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <small>Cliente</small>
+                            <strong id="cliente-nombre">Público General</strong>
+                        </div>
                         <i class="fas fa-chevron-down"></i>
                     </div>
-                    <div class="customer-selected" id="cliente-info" style="display: none;">
-                        <div class="customer-data">
-                            <strong id="cliente-nombre-selected"></strong>
-                            <small id="cliente-grupo"></small>
-                        </div>
-                        <button class="btn-clear-customer" onclick="Clientes.limpiarSeleccion()">
-                            <i class="fas fa-times"></i>
+                    <div class="sale-info" id="cliente-grupo-badge" style="display:none">
+                        <span class="badge-grupo" id="cliente-grupo-text"></span>
+                    </div>
+                </div>
+                
+                <!-- BARRA DE BÚSQUEDA -->
+                <div class="search-bar">
+                    <div class="search-input">
+                        <i class="fas fa-barcode"></i>
+                        <input type="text" id="search-producto" placeholder="Escanea código o presiona F2 para buscar..." autofocus>
+                    </div>
+                    <button class="btn btn-primary" onclick="abrirModalBusqueda()">
+                        <i class="fas fa-search"></i>
+                        <span>Buscar</span>
+                        <kbd>F2</kbd>
+                    </button>
+                </div>
+                
+                <!-- TABLA CARRITO -->
+                <div class="cart-wrapper">
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th class="col-name">Producto</th>
+                                <th class="col-price">Precio</th>
+                                <th class="col-qty">Cantidad</th>
+                                <th class="col-total">Importe</th>
+                                <th class="col-actions"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-body"></tbody>
+                    </table>
+                    <div class="cart-empty" id="cart-empty">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Escanea o busca productos para agregar</p>
+                        <small>Usa el lector de códigos o presiona <kbd>F2</kbd></small>
+                    </div>
+                </div>
+                
+                <!-- FOOTER CARRITO -->
+                <div class="cart-footer">
+                    <div class="cart-actions">
+                        <button class="btn btn-outline" onclick="limpiarCarrito()" title="Limpiar carrito (F4)">
+                            <i class="fas fa-trash"></i>
+                            <span>Limpiar</span>
+                            <kbd>F4</kbd>
+                        </button>
+                        <button class="btn btn-success btn-lg" onclick="abrirModalCobro()" id="btn-cobrar" disabled title="Cobrar venta (F12)">
+                            <i class="fas fa-cash-register"></i>
+                            <span>Cobrar</span>
+                            <kbd>F12</kbd>
                         </button>
                     </div>
                 </div>
-
-                <!-- ITEMS DEL CARRITO -->
-                <div class="cart-items" id="cart-items">
-                    <div class="cart-empty">
-                        <div class="empty-icon">🛒</div>
-                        <p>Carrito vacío</p>
-                        <small>Agrega productos para comenzar</small>
-                    </div>
-                </div>
-
-                <!-- RESUMEN -->
-                <div class="cart-summary" id="cart-summary" style="display:none">
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <span id="cart-subtotal">$0</span>
-                    </div>
-                    <div class="summary-row discount">
-                        <span>Descuento:</span>
-                        <span id="cart-descuento">-$0</span>
-                    </div>
-                    <div class="summary-row extra" id="cart-extra-row" style="display:none">
-                        <span>Desc. Extra:</span>
-                        <span id="cart-extra">$0</span>
-                    </div>
-                    <div class="summary-row total">
-                        <span>TOTAL:</span>
-                        <span id="cart-total">$0</span>
-                    </div>
-                </div>
-
-                <!-- BOTONES DE ACCIÓN -->
-                <div class="cart-actions">
-                    <button class="btn btn-secondary" onclick="limpiarCarrito()">
-                        <i class="fas fa-trash"></i> Limpiar
-                    </button>
-                    <button class="btn btn-primary btn-cobrar" onclick="abrirModalCobro()" id="btn-cobrar" disabled>
-                        <i class="fas fa-cash-register"></i> Cobrar
-                    </button>
-                </div>
             </section>
+            
+            <!-- PANEL DERECHO: RESUMEN -->
+            <aside class="panel-summary">
+                <div class="total-header">
+                    <span>Total a Pagar</span>
+                    <strong id="total-display">$0.00</strong>
+                </div>
+                
+                <div class="summary-section">
+                    <h4>Resumen de Venta</h4>
+                    <div class="summary-info">
+                        <div class="info-row"><span>Artículos</span><span id="r-items">0</span></div>
+                        <div class="info-row"><span>Subtotal</span><span id="r-subtotal">$0.00</span></div>
+                        <div class="info-row discount"><span>Descuentos</span><span id="r-descuentos">-$0.00</span></div>
+                        <div class="info-row extra" id="r-extra-row" style="display:none"><span>Desc. Extra</span><span id="r-extra">$0.00</span></div>
+                    </div>
+                </div>
+                
+                <div class="summary-section ticket-info">
+                    <div class="ticket-row">
+                        <i class="fas fa-user"></i>
+                        <div>
+                            <span>Cliente</span>
+                            <strong id="r-cliente">Público General</strong>
+                        </div>
+                    </div>
+                    <div class="ticket-row">
+                        <i class="fas fa-store"></i>
+                        <div>
+                            <span>Sucursal</span>
+                            <strong id="r-sucursal">-</strong>
+                        </div>
+                    </div>
+                    <div class="ticket-row">
+                        <i class="fas fa-user-tag"></i>
+                        <div>
+                            <span>Vendedor</span>
+                            <strong id="r-vendedor">-</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-section promos-section" id="promos-activas" style="display:none">
+                    <h4><i class="fas fa-tags"></i> Promociones Activas</h4>
+                    <div id="promos-lista"></div>
+                </div>
+            </aside>
         </main>
+        
+        <!-- SHORTCUTS BAR -->
+        <div class="shortcuts-bar">
+            <span><kbd>F2</kbd> Buscar</span>
+            <span><kbd>F4</kbd> Limpiar</span>
+            <span><kbd>F12</kbd> Cobrar</span>
+            <span><kbd>Esc</kbd> Cerrar</span>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: BÚSQUEDA PRODUCTOS ========== -->
+    <div id="modal-busqueda" class="modal-overlay">
+        <div class="modal modal-xl">
+            <div class="modal-header">
+                <h3><i class="fas fa-search"></i> Buscar Producto</h3>
+                <button class="btn-close" onclick="cerrarModal('modal-busqueda')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-toolbar">
+                <div class="search-field large">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="modal-search-producto" placeholder="Buscar por nombre o código..." autofocus>
+                </div>
+                <div class="toolbar-controls">
+                    <div class="filter-select">
+                        <label>Categoría:</label>
+                        <select id="filtro-categoria">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body no-padding">
+                <table class="productos-table-large">
+                    <thead>
+                        <tr>
+                            <th class="col-code">Código</th>
+                            <th class="col-name">Producto</th>
+                            <th class="col-category">Categoría</th>
+                            <th class="col-price">Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos-modal-tbody">
+                        <tr>
+                            <td colspan="4" class="loading-cell">
+                                <div class="loader small"></div>
+                                <span>Cargando productos...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- ========== MODAL: CLIENTES ========== -->
@@ -312,9 +390,7 @@
         <div class="modal modal-md">
             <div class="modal-header">
                 <h3><i class="fas fa-users"></i> Seleccionar Cliente</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-clientes')">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="btn-close" onclick="cerrarModal('modal-clientes')"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
                 <div class="search-box mb-15">
@@ -332,11 +408,9 @@
                     </div>
                 </div>
                 
-                <div class="modal-divider">
-                    <span>o crear nuevo</span>
-                </div>
+                <div class="modal-divider"><span>o crear nuevo</span></div>
                 
-                <div class="nuevo-cliente-form" id="nuevo-cliente-form">
+                <div class="nuevo-cliente-form">
                     <div class="form-row">
                         <div class="field">
                             <label>Código *</label>
@@ -370,13 +444,9 @@
         <div class="modal modal-xl">
             <div class="modal-header gradient">
                 <h3><i class="fas fa-cash-register"></i> Procesar Cobro</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-cobro')">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="btn-close" onclick="cerrarModal('modal-cobro')"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body" id="modal-cobro-body">
-                <!-- Se llena dinámicamente por cobro.js -->
-            </div>
+            <div class="modal-body" id="modal-cobro-body"></div>
         </div>
     </div>
 
@@ -385,13 +455,9 @@
         <div class="modal modal-lg">
             <div class="modal-header danger">
                 <h3><i class="fas fa-lock"></i> Cerrar Turno</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-cerrar-turno')">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="btn-close" onclick="cerrarModal('modal-cerrar-turno')"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body" id="modal-cerrar-turno-body">
-                <!-- Se llena dinámicamente por turno.js -->
-            </div>
+            <div class="modal-body" id="modal-cerrar-turno-body"></div>
         </div>
     </div>
 
@@ -399,39 +465,24 @@
     <div id="modal-exito" class="modal-overlay">
         <div class="modal modal-sm success-modal">
             <div class="success-content">
-                <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
+                <div class="success-icon"><i class="fas fa-check-circle"></i></div>
                 <h2>¡Venta Exitosa!</h2>
                 <div class="success-details">
-                    <div class="detail-row">
-                        <span>Ticket:</span>
-                        <strong id="exito-ticket">#0001</strong>
-                    </div>
-                    <div class="detail-row">
-                        <span>Total:</span>
-                        <strong id="exito-total">$0.00</strong>
-                    </div>
-                    <div class="detail-row cambio">
-                        <span>Cambio:</span>
-                        <strong id="exito-cambio">$0.00</strong>
-                    </div>
+                    <div class="detail-row"><span>Ticket:</span><strong id="exito-ticket">#0001</strong></div>
+                    <div class="detail-row"><span>Total:</span><strong id="exito-total">$0.00</strong></div>
+                    <div class="detail-row cambio"><span>Cambio:</span><strong id="exito-cambio">$0.00</strong></div>
                 </div>
                 <div class="success-actions">
-                    <button class="btn btn-secondary" onclick="imprimirTicket()">
-                        <i class="fas fa-print"></i> Imprimir
-                    </button>
-                    <button class="btn btn-primary" onclick="cerrarModalExito()">
-                        <i class="fas fa-plus"></i> Nueva Venta
-                    </button>
+                    <button class="btn btn-outline" onclick="imprimirTicket()"><i class="fas fa-print"></i> Imprimir</button>
+                    <button class="btn btn-primary" onclick="cerrarModalExito()"><i class="fas fa-plus"></i> Nueva Venta</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ========== TICKET DE IMPRESIÓN ========== -->
+    <!-- ========== TICKET IMPRESIÓN ========== -->
     <div id="ticket-print" class="ticket-print">
-        <div class="ticket-header">
+        <div class="ticket-header-print">
             <div class="ticket-logo">UMO</div>
             <div class="ticket-title">TICKET DE VENTA</div>
             <div class="ticket-info" id="ticket-fecha"></div>
@@ -439,53 +490,26 @@
         </div>
         <div class="ticket-divider"></div>
         <div class="ticket-data">
-            <div class="ticket-row">
-                <span>Venta:</span>
-                <span id="ticket-venta-id"></span>
-            </div>
-            <div class="ticket-row">
-                <span>Vendedor:</span>
-                <span id="ticket-vendedor"></span>
-            </div>
-            <div class="ticket-row">
-                <span>Sucursal:</span>
-                <span id="ticket-sucursal"></span>
-            </div>
-            <div class="ticket-row">
-                <span>Cliente:</span>
-                <span id="ticket-cliente"></span>
-            </div>
+            <div class="ticket-row"><span>Venta:</span><span id="ticket-venta-id"></span></div>
+            <div class="ticket-row"><span>Vendedor:</span><span id="ticket-vendedor"></span></div>
+            <div class="ticket-row"><span>Sucursal:</span><span id="ticket-sucursal"></span></div>
+            <div class="ticket-row"><span>Cliente:</span><span id="ticket-cliente"></span></div>
         </div>
         <div class="ticket-divider"></div>
         <div class="ticket-items" id="ticket-items"></div>
         <div class="ticket-divider"></div>
         <div class="ticket-totals">
-            <div class="ticket-row">
-                <span>Subtotal:</span>
-                <span id="ticket-subtotal"></span>
-            </div>
-            <div class="ticket-row" id="ticket-descuento-row">
-                <span>Descuento:</span>
-                <span id="ticket-descuento"></span>
-            </div>
-            <div class="ticket-row total">
-                <span>TOTAL:</span>
-                <span id="ticket-total"></span>
-            </div>
+            <div class="ticket-row"><span>Subtotal:</span><span id="ticket-subtotal"></span></div>
+            <div class="ticket-row" id="ticket-descuento-row"><span>Descuento:</span><span id="ticket-descuento"></span></div>
+            <div class="ticket-row total"><span>TOTAL:</span><span id="ticket-total"></span></div>
         </div>
         <div class="ticket-divider"></div>
         <div class="ticket-pagos" id="ticket-pagos"></div>
-        <div class="ticket-row" id="ticket-cambio-row" style="display:none">
-            <span><strong>CAMBIO:</strong></span>
-            <span id="ticket-cambio"><strong></strong></span>
-        </div>
-        <div class="ticket-footer">
-            <p>¡Gracias por su compra!</p>
-            <p>www.umo.mx</p>
-        </div>
+        <div class="ticket-row" id="ticket-cambio-row" style="display:none"><span><strong>CAMBIO:</strong></span><span id="ticket-cambio"><strong></strong></span></div>
+        <div class="ticket-footer"><p>¡Gracias por su compra!</p><p>www.umo.mx</p></div>
     </div>
 
-    <!-- ========== TOAST NOTIFICATIONS ========== -->
+    <!-- TOAST -->
     <div id="toast" class="toast"></div>
 
     <!-- SCRIPTS -->
