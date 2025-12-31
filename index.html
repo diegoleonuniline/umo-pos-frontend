@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UMO - Punto de Venta</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Fix temporal para asegurar que cargue */
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
 </head>
 <body>
 
@@ -15,8 +19,8 @@
     <div id="login-screen" class="screen login-screen">
         <div class="login-card">
             <div class="login-header">
-                <div class="logo-icon">
-                    <i class="fas fa-store"></i>
+                <div class="logo-container">
+                    <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="logo-img" style="height: 60px;">
                 </div>
                 <h1>UMO</h1>
                 <p>Sistema Punto de Venta</p>
@@ -49,9 +53,7 @@
     <!-- ========== PANTALLA LOADING ========== -->
     <div id="loading-screen" class="screen loading-screen" style="display:none">
         <div class="loading-content">
-            <div class="logo-icon">
-                <i class="fas fa-store"></i>
-            </div>
+            <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" style="height: 70px; margin-bottom: 15px;">
             <h1>UMO</h1>
             <div class="loader"></div>
             <p>Cargando datos...</p>
@@ -62,15 +64,13 @@
     <div id="turno-screen" class="screen turno-screen" style="display:none">
         <div class="turno-card">
             <div class="turno-header">
-                <div class="logo-icon">
-                    <i class="fas fa-store"></i>
-                </div>
+                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" style="height: 50px; margin-bottom: 10px;">
                 <h1>Abrir Turno</h1>
                 <p>Ingresa los datos para iniciar tu turno</p>
             </div>
             
             <div class="turno-user-info">
-                <i class="fas fa-user-circle"></i>
+                <i class="fas fa-user-circle" style="font-size: 36px; color: #2c3e50;"></i>
                 <div>
                     <strong id="turno-usuario-nombre">Usuario</strong>
                     <small id="turno-usuario-sucursal">Sucursal</small>
@@ -134,7 +134,7 @@
                 
                 <div class="turno-actions">
                     <button type="button" class="btn btn-outline" onclick="cerrarSesion()">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        <i class="fas fa-sign-out-alt"></i> Salir
                     </button>
                     <button type="submit" id="turno-btn" class="btn btn-success">
                         <i class="fas fa-play"></i>
@@ -153,13 +153,11 @@
         <header class="header">
             <div class="header-left">
                 <div class="logo">
-                    <div class="logo-icon small">
-                        <i class="fas fa-store"></i>
-                    </div>
+                    <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" style="height: 36px;">
                     <span>UMO</span>
                 </div>
                 <div class="turno-status">
-                    <i class="fas fa-clock"></i>
+                    <span class="status-dot"></span>
                     <span>Turno: <strong id="header-turno-id">-</strong></span>
                 </div>
             </div>
@@ -173,7 +171,7 @@
             </div>
             
             <div class="header-right">
-                <div class="user-pill" id="user-pill">
+                <div class="user-pill">
                     <div class="avatar" id="user-avatar">US</div>
                     <div class="user-text">
                         <span id="user-name">Usuario</span>
@@ -190,25 +188,25 @@
         </header>
 
         <!-- CONTENIDO PRINCIPAL -->
-        <main class="main-content">
+        <main class="main-container">
             
             <!-- PANEL IZQUIERDO: PRODUCTOS -->
-            <section class="panel-products">
+            <section class="products-section">
                 <div class="section-header">
-                    <h2><i class="fas fa-boxes"></i> Productos</h2>
+                    <h2 class="section-title"><i class="fas fa-boxes"></i> Productos</h2>
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
                         <input type="text" id="search-producto" placeholder="Buscar por código o nombre...">
                     </div>
                 </div>
-                <div class="products-table-container">
+                <div class="table-container">
                     <table class="products-table">
                         <thead>
                             <tr>
                                 <th>SKU</th>
                                 <th>Producto</th>
                                 <th>Precio</th>
-                                <th>Stock</th>
+                                <th>Categoría</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -225,44 +223,44 @@
             </section>
 
             <!-- PANEL DERECHO: CARRITO -->
-            <section class="panel-cart">
+            <section class="cart-section">
                 <div class="section-header">
-                    <h2><i class="fas fa-shopping-cart"></i> Venta Actual</h2>
-                    <div class="cliente-selector" onclick="abrirModalClientes()">
+                    <h2 class="section-title"><i class="fas fa-shopping-cart"></i> Venta Actual</h2>
+                    <div class="cliente-selector" id="cliente-nombre" onclick="abrirModalClientes()">
                         <i class="fas fa-user"></i>
-                        <span id="cliente-nombre">Cliente General</span>
-                        <i class="fas fa-chevron-down"></i>
+                        Cliente General
+                        <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 10px;"></i>
                     </div>
                 </div>
 
-                <div class="cart-items" id="cart-items">
+                <div class="cart-items-container" id="cart-items">
                     <div class="cart-empty">
-                        <i class="fas fa-shopping-cart"></i>
+                        <div class="empty-cart-icon">🛒</div>
                         <p>Carrito vacío</p>
                         <small>Agrega productos para comenzar</small>
                     </div>
                 </div>
 
                 <div class="cart-summary" id="cart-summary" style="display:none">
-                    <div class="summary-row">
+                    <div class="summary-row subtotal">
                         <span>Subtotal:</span>
-                        <span id="cart-subtotal">$0.00</span>
+                        <span id="cart-subtotal">$0</span>
                     </div>
                     <div class="summary-row discount">
                         <span>Descuento:</span>
-                        <span id="cart-descuento">-$0.00</span>
+                        <span id="cart-descuento">-$0</span>
                     </div>
                     <div class="summary-row total">
                         <span>TOTAL:</span>
-                        <span id="cart-total">$0.00</span>
+                        <span id="cart-total">$0</span>
                     </div>
                 </div>
 
-                <div class="cart-actions">
-                    <button class="btn btn-outline" onclick="limpiarCarrito()">
+                <div class="action-buttons">
+                    <button class="btn btn-clear" onclick="limpiarCarrito()">
                         <i class="fas fa-trash"></i> Limpiar
                     </button>
-                    <button class="btn btn-success btn-lg" onclick="abrirModalCobro()" id="btn-cobrar" disabled>
+                    <button class="btn btn-process" onclick="abrirModalCobro()" id="btn-cobrar" disabled>
                         <i class="fas fa-cash-register"></i> Cobrar
                     </button>
                 </div>
@@ -274,7 +272,7 @@
     <div id="modal-cobro" class="modal-overlay">
         <div class="modal modal-lg">
             <div class="modal-header gradient">
-                <h3><i class="fas fa-cash-register"></i> Procesar Cobro</h3>
+                <h3 class="modal-title"><i class="fas fa-cash-register"></i> Procesar Cobro</h3>
                 <button class="btn-close" onclick="cerrarModal('modal-cobro')">
                     <i class="fas fa-times"></i>
                 </button>
@@ -289,7 +287,7 @@
     <div id="modal-cerrar-turno" class="modal-overlay">
         <div class="modal modal-lg">
             <div class="modal-header danger">
-                <h3><i class="fas fa-cash-register"></i> Cerrar Turno - Corte de Caja</h3>
+                <h3 class="modal-title"><i class="fas fa-cash-register"></i> Cerrar Turno</h3>
                 <button class="btn-close" onclick="cerrarModal('modal-cerrar-turno')">
                     <i class="fas fa-times"></i>
                 </button>
@@ -304,13 +302,13 @@
     <div id="modal-clientes" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <h3><i class="fas fa-users"></i> Seleccionar Cliente</h3>
+                <h3 class="modal-title"><i class="fas fa-users"></i> Seleccionar Cliente</h3>
                 <button class="btn-close" onclick="cerrarModal('modal-clientes')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="search-bar" style="margin-bottom: 15px;">
+                <div class="search-bar" style="margin-bottom: 15px; width: 100%;">
                     <i class="fas fa-search"></i>
                     <input type="text" id="search-cliente" placeholder="Buscar cliente...">
                 </div>
@@ -329,12 +327,12 @@
 
     <!-- ========== MODAL: ÉXITO ========== -->
     <div id="modal-exito" class="modal-overlay">
-        <div class="modal modal-sm modal-success">
-            <div class="success-content">
+        <div class="modal modal-sm">
+            <div class="success-animation show" style="position: relative; display: block; transform: none; box-shadow: none;">
                 <div class="success-icon">
                     <i class="fas fa-check"></i>
                 </div>
-                <h2>¡Venta Exitosa!</h2>
+                <h2 class="success-text">¡Venta Exitosa!</h2>
                 <div class="success-details">
                     <p>Ticket: <strong id="exito-ticket">#0001</strong></p>
                     <p>Total: <strong id="exito-total">$0.00</strong></p>
