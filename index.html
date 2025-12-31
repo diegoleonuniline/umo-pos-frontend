@@ -327,30 +327,6 @@
                     </div>
                 </div>
                 
-                <!-- PRODUCTOS LISTA (oculto en mobile) -->
-                <div class="productos-mini">
-                    <h4><i class="fas fa-boxes"></i> Productos</h4>
-                    <div class="productos-mini-table">
-                        <table class="products-table">
-                            <thead>
-                                <tr>
-                                    <th>SKU</th>
-                                    <th>Producto</th>
-                                    <th>Precio</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="productos-tbody">
-                                <tr>
-                                    <td colspan="4" class="loading-cell">
-                                        <div class="loader small"></div>
-                                        <span>Cargando productos...</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </aside>
         </main>
         
@@ -362,6 +338,11 @@
             <span><kbd>Esc</kbd> Cerrar</span>
             <span><kbd>Ctrl+N</kbd> Nueva Venta</span>
         </div>
+    </div>
+
+    <!-- PRODUCTOS TBODY OCULTO (para compatibilidad con productos.js) -->
+    <div style="display:none">
+        <table><tbody id="productos-tbody"></tbody></table>
     </div>
 
     <!-- ========== MODAL: CLIENTES ========== -->
