@@ -49,6 +49,8 @@ const Turno = {
             const usuario = Auth.getNombre();
             const sucursal = Auth.getSucursal();
             
+            console.log('🔍 Verificando turno para:', { usuario, sucursal });
+            
             if (!usuario || !sucursal) {
                 console.error('No hay usuario o sucursal para verificar turno');
                 return false;
@@ -56,7 +58,10 @@ const Turno = {
             
             const result = await API.verificarTurnoActivo(usuario, sucursal);
             
+            console.log('📦 Respuesta API turno:', result);
+            
             if (result.success && result.turnoActivo) {
+                console.log('✅ Turno activo encontrado:', result.turnoActivo);
                 this.actual = result.turnoActivo;
                 this.tasas = {
                     USD: parseFloat(result.turnoActivo['USD a MXN']) || CONFIG.DEFAULT_RATES.USD,
@@ -67,6 +72,7 @@ const Turno = {
                 return true;
             }
             
+            console.log('❌ No hay turno activo');
             // No hay turno activo, limpiar localStorage
             localStorage.removeItem(this.getStorageKey());
             this.actual = null;
