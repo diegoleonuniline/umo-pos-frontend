@@ -8,6 +8,7 @@ const Cobro = {
     monedaSeleccionada: 'MXN',
     metodosPago: [],
     descuentos: [],
+    descuentoAutoAplicado: null,
     
     async init() {
         await this.cargarMetodosPago();
@@ -43,22 +44,71 @@ const Cobro = {
             return;
         }
         
-        if (!Carrito.cliente && !Clientes.seleccionado) {
-            mostrarToast('Selecciona un cliente', 'error');
-            document.getElementById('cliente-nombre').click();
-            return;
-        }
-        
         this.pagos = [];
         this.metodoSeleccionado = this.metodosPago[0] || 'Efectivo';
         this.monedaSeleccionada = 'MXN';
+        this.descuentoAutoAplicado = null;
         
         this.renderModal();
         document.getElementById('modal-cobro').classList.add('active');
+        
+        // Calcular descuento automático al abrir
+        this.calcularDescuentoAutomatico();
     },
     
     cerrarModal() {
         document.getElementById('modal-cobro').classList.remove('active');
+    },
+    
+    // ============================================
+    // DESCUENTO AUTOMÁTICO
+    // ============================================
+    async calcularDescuentoAutomatico() {
+        const cliente = Clientes.seleccionado;
+        const grupoCliente = cliente ? cliente.grupo : '';
+        const metodoPago = this.metodoSeleccionado;
+        
+        console.log('Calculando descuento:', { grupoCliente, metodoPago });
+        
+        try {
+            const result = await API.calcularDescuento(grupoCliente, metodoPago);
+            
+            console.log('Resultado descuento:', result);
+            
+            if (result.success && result.porcentaje > 0) {
+                this.descuentoAutoAplicado = {
+                    porcentaje: result.porcentaje,
+                    descripcion: result.descripcion,
+                    id: result.id
+                };
+                
+                // Aplicar al carrito
+                Carrito.aplicarDescuentoAutomatico(result.porcentaje, result.descripcion, result.id);
+                Carrito.tipoDescuento = result.descripcion;
+                
+                // Actualizar UI
+                this.actualizarInfoDescuento(result.porcentaje, result.descripcion);
+                
+                // Seleccionar en el dropdown si existe
+                const select = document.getElementById('discount-select');
+                if (select && result.id) {
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === result.id) {
+                            select.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                this.descuentoAutoAplicado = null;
+                this.actualizarInfoDescuento(0, 'Sin descuento automático');
+            }
+            
+            this.actualizarTotalesModal();
+            
+        } catch (error) {
+            console.error('Error calculando descuento:', error);
+        }
     },
     
     renderModal() {
@@ -67,18 +117,33 @@ const Cobro = {
         const subtotal = Carrito.getSubtotal();
         const descuento = Carrito.getDescuentoTotal();
         const total = Carrito.getTotal();
+        const cliente = Clientes.seleccionado;
         
         body.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 400px; gap: 20px;">
                 <!-- Columna izquierda -->
                 <div>
+                    <!-- Info Cliente -->
+                    <div class="payment-section" style="background: ${cliente ? '#e8f5e9' : '#fff3e0'}; border: 1px solid ${cliente ? '#a5d6a7' : '#ffcc80'};">
+                        <h3>👤 Cliente</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${cliente ? cliente.nombre : 'Cliente General'}</strong>
+                                ${cliente && cliente.grupo ? `<br><span style="color: #666; font-size: 12px;">Grupo: ${cliente.grupo}</span>` : ''}
+                            </div>
+                            <button class="btn btn-outline" onclick="Cobro.cambiarCliente()" style="padding: 6px 12px; font-size: 12px;">
+                                Cambiar
+                            </button>
+                        </div>
+                    </div>
+                
                     <!-- Descuentos -->
                     <div class="payment-section">
                         <h3>💰 Sistema de Descuentos</h3>
                         
                         <div id="active-discount-info" class="active-discount-info">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span id="active-discount-text">Sin descuento automático</span>
+                                <span id="active-discount-text">Calculando descuento...</span>
                                 <span id="active-discount-value" style="font-weight: bold; color: #2e7d32;">0%</span>
                             </div>
                         </div>
@@ -92,7 +157,7 @@ const Cobro = {
                                     <option value="">Sin descuento</option>
                                     <option value="manual">✏️ Manual (ingresar %)</option>
                                     ${this.descuentos.map(d => `
-                                        <option value="${d.id}" data-porcentaje="${d.porcentaje}">${d.nombre} (${d.porcentaje}%)</option>
+                                        <option value="${d.id}" data-porcentaje="${d.porcentaje}">${d.etiqueta || d.nombre} (${d.porcentaje}%)</option>
                                     `).join('')}
                                 </select>
                                 <input type="number" id="manual-discount-input" 
@@ -121,7 +186,7 @@ const Cobro = {
                         </div>
                         
                         <div class="discount-note" style="margin-top: 10px;">
-                            ℹ️ Los descuentos solo se aplican a productos sin promociones.
+                            ℹ️ El descuento se calcula automáticamente según el grupo del cliente y método de pago.
                         </div>
                     </div>
                     
@@ -250,10 +315,18 @@ const Cobro = {
         return iconos[metodo] || '💰';
     },
     
+    cambiarCliente() {
+        this.cerrarModal();
+        abrirModalClientes();
+    },
+    
     seleccionarMetodo(btn) {
         document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.metodoSeleccionado = btn.dataset.method;
+        
+        // Recalcular descuento automático con nuevo método
+        this.calcularDescuentoAutomatico();
         
         // Auto-llenar monto si no es efectivo
         if (this.metodoSeleccionado !== 'Efectivo') {
@@ -439,8 +512,14 @@ const Cobro = {
     },
     
     actualizarInfoDescuento(porcentaje, descripcion) {
-        document.getElementById('active-discount-text').textContent = porcentaje > 0 ? `✅ ${descripcion}` : 'Sin descuento';
-        document.getElementById('active-discount-value').textContent = `${porcentaje}%`;
+        const textEl = document.getElementById('active-discount-text');
+        const valueEl = document.getElementById('active-discount-value');
+        
+        if (textEl && valueEl) {
+            textEl.textContent = porcentaje > 0 ? `✅ ${descripcion}` : 'Sin descuento automático';
+            valueEl.textContent = `${porcentaje}%`;
+            valueEl.style.color = porcentaje > 0 ? '#2e7d32' : '#999';
+        }
     },
     
     actualizarTotalesModal() {
@@ -531,7 +610,7 @@ const Cobro = {
                     Monto: montoOriginal,
                     Moneda: p.moneda,
                     Metodo: p.metodo,
-                    'Tasa de Cambio': p.tasa,
+                    TasaCambio: p.tasa,
                     SucursaldeRegistro: Auth.getSucursal(),
                     'Grupo Cliente': cliente ? cliente.grupo : '',
                     'Descuento Aplicado General': Carrito.descuentoExtra,
