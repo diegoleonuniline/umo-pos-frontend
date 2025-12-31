@@ -76,6 +76,29 @@
         .cobro-extra-input input { flex: 1; padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 12px; text-align: right; }
 
         /* ============================================ */
+        /* BOTÓN SYNC */
+        /* ============================================ */
+        .btn-sync { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            padding: 8px 12px; 
+            background: white; 
+            color: var(--umo-dark); 
+            border: 1px solid var(--gray-200); 
+            border-radius: var(--radius); 
+            cursor: pointer; 
+            font-size: 12px; 
+            font-weight: 500; 
+            transition: all 0.2s; 
+        }
+        .btn-sync:hover { background: var(--gray-50); border-color: var(--umo-beige); }
+        .btn-sync:disabled { opacity: 0.6; cursor: wait; }
+        .btn-sync i { font-size: 14px; }
+        .btn-sync i.fa-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* ============================================ */
         /* MODAL VENTAS TURNO */
         /* ============================================ */
         .modal-ventas-turno { max-width: 950px; }
@@ -328,11 +351,6 @@
             margin-left: 5px; 
         }
 
-        <!-- BOTÓN SINCRONIZAR -->
-<button class="btn-sync" id="btn-sync" onclick="sincronizarDatos()" title="Sincronizar datos">
-    <i class="fas fa-sync-alt"></i>
-    <span id="sync-indicator">Sync</span>
-</button>
         /* ============================================ */
         /* RESPONSIVE */
         /* ============================================ */
@@ -459,6 +477,11 @@
                 </div>
             </div>
             <div class="header-right">
+                <!-- BOTÓN SINCRONIZAR -->
+                <button class="btn-sync" id="btn-sync" onclick="sincronizarDatos()" title="Sincronizar datos">
+                    <i class="fas fa-sync-alt"></i>
+                    <span id="sync-indicator">Sync</span>
+                </button>
                 <!-- BOTÓN MIS VENTAS -->
                 <button class="btn-mis-ventas" onclick="VentasTurno.abrir()" title="Ver ventas del turno">
                     <i class="fas fa-receipt"></i>
