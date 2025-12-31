@@ -8,6 +8,7 @@ const Cobro = {
     monedaSeleccionada: 'MXN',
     metodosPago: [],
     descuentos: [],
+    descuentoAplicado: null,
     
     async init() {
         await this.cargarMetodosPago();
@@ -174,22 +175,30 @@ const Cobro = {
         
         try {
             const result = await API.calcularDescuento(grupoCliente, this.metodoSeleccionado);
-            console.log('Resultado descuento:', result);
             
             const activoEl = document.getElementById('cobro-descuento-activo');
             const nombreEl = document.getElementById('cobro-descuento-nombre');
             const porcentajeEl = document.getElementById('cobro-descuento-porcentaje');
             
             if (result.success && result.porcentaje > 0) {
-                // Mostrar descuento activo
                 if (activoEl) activoEl.style.display = 'flex';
                 if (nombreEl) nombreEl.textContent = result.descripcion;
                 if (porcentajeEl) porcentajeEl.textContent = `${result.porcentaje}%`;
                 
-                // Aplicar al carrito
+                // Aplicar al carrito Y guardar tipo de descuento
                 Carrito.aplicarDescuentoAutomatico(result.porcentaje, result.descripcion, result.id);
+                Carrito.tipoDescuento = result.descripcion;
+                
+                // Guardar en Cobro también para referencia
+                this.descuentoAplicado = {
+                    porcentaje: result.porcentaje,
+                    descripcion: result.descripcion,
+                    id: result.id
+                };
             } else {
                 if (activoEl) activoEl.style.display = 'none';
+                Carrito.tipoDescuento = 'Ninguno';
+                this.descuentoAplicado = null;
             }
             
             this.actualizarTotalesUI();
@@ -295,7 +304,8 @@ const Cobro = {
                 Sucursal: Auth.getSucursal(),
                 Vendedor: Auth.getNombre(),
                 Cliente: cliente ? cliente.codigo : 'GENERAL',
-                TipoDescuento: Carrito.tipoDescuento || 'Ninguno',
+                TipoDescuento: this.descuentoAplicado ? this.descuentoAplicado.id : '',
+                PorcentajeDescuento: this.descuentoAplicado ? this.descuentoAplicado.porcentaje : 0,
                 Observaciones: observaciones,
                 DescuentoExtra: Carrito.descuentoExtra || 0,
                 GrupoCliente: cliente ? cliente.grupo : '',
@@ -331,6 +341,9 @@ const Cobro = {
                     Metodo: p.metodoNombre,
                     'Tasa de Cambio': p.tasa,
                     SucursaldeRegistro: Auth.getSucursal(),
+                    'Grupo Cliente': cliente ? cliente.grupo : '',
+                    'Descuento Aplicado General': this.descuentoAplicado ? this.descuentoAplicado.id : '',
+                    'Porcentaje Descuento': this.descuentoAplicado ? this.descuentoAplicado.porcentaje : 0,
                     Cliente: cliente ? cliente.codigo : 'GENERAL',
                     Vendedor: Auth.getNombre(),
                     Estado: 'Cerrado'
@@ -350,6 +363,7 @@ const Cobro = {
                 Carrito.descuentoExtra = 0;
                 Carrito.tipoDescuento = 'Ninguno';
                 this.pagos = [];
+                this.descuentoAplicado = null;
                 
                 Clientes.limpiarSeleccion();
                 Carrito.render();
