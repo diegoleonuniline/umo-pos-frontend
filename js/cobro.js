@@ -43,6 +43,12 @@ const Cobro = {
             return;
         }
         
+        console.log('=== ABRIENDO MODAL COBRO ===');
+        console.log('Carrito.items:', Carrito.items);
+        console.log('Carrito.getSubtotal():', Carrito.getSubtotal());
+        console.log('Carrito.getTotal():', Carrito.getTotal());
+        console.log('Clientes.seleccionado:', Clientes.seleccionado);
+        
         this.pagos = [];
         this.metodoSeleccionado = 'efectivo';
         this.monedaSeleccionada = 'MXN';
@@ -64,9 +70,15 @@ const Cobro = {
     },
     
     actualizarClienteUI() {
+        console.log('=== actualizarClienteUI ===');
         const cliente = Clientes.seleccionado;
+        console.log('Clientes.seleccionado:', cliente);
+        
         const nombreEl = document.getElementById('cobro-cliente-nombre');
         const grupoEl = document.getElementById('cobro-cliente-grupo');
+        
+        console.log('nombreEl:', nombreEl);
+        console.log('grupoEl:', grupoEl);
         
         if (nombreEl) {
             nombreEl.textContent = cliente ? cliente.nombre : 'Cliente General';
@@ -77,14 +89,26 @@ const Cobro = {
     },
     
     actualizarTotalesUI() {
+        console.log('=== actualizarTotalesUI ===');
+        console.log('Carrito.items:', Carrito.items);
+        console.log('Carrito.items.length:', Carrito.items.length);
+        
         const subtotal = Carrito.getSubtotal();
         const descuento = Carrito.getDescuentoTotal();
         const total = Carrito.getTotal();
+        
+        console.log('subtotal:', subtotal);
+        console.log('descuento:', descuento);
+        console.log('total:', total);
         
         const subtotalEl = document.getElementById('cobro-subtotal');
         const descuentoEl = document.getElementById('cobro-descuento');
         const totalEl = document.getElementById('cobro-total');
         const pendienteEl = document.getElementById('cobro-pendiente');
+        
+        console.log('subtotalEl:', subtotalEl);
+        console.log('descuentoEl:', descuentoEl);
+        console.log('totalEl:', totalEl);
         
         if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
         if (descuentoEl) descuentoEl.textContent = `-$${descuento.toFixed(2)}`;
