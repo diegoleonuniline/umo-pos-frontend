@@ -19,7 +19,7 @@ const VentasTurno = {
     // CARGAR VENTAS DEL TURNO
     // ============================================
     async cargar() {
-        const turnoId = Turno.actual?.id;
+const turnoId = Turno.actual?.ID || Turno.actual?.id;
         if (!turnoId) {
             this.mostrarVacio();
             return;
