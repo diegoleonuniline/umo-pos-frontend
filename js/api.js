@@ -96,6 +96,13 @@ const API = {
         return this.request('/api/descuentos');
     },
     
+    async calcularDescuento(grupoCliente, metodoPago) {
+        return this.request('/api/descuentos/calcular', {
+            method: 'POST',
+            body: JSON.stringify({ grupoCliente, metodoPago })
+        });
+    },
+    
     // ============================================
     // PROMOCIONES
     // ============================================
@@ -113,16 +120,3 @@ const API = {
         });
     }
 };
-// ============================================
-// DESCUENTOS
-// ============================================
-async obtenerDescuentos() {
-    return this.request('/api/descuentos');
-},
-
-async calcularDescuento(grupoCliente, metodoPago) {
-    return this.request('/api/descuentos/calcular', {
-        method: 'POST',
-        body: JSON.stringify({ grupoCliente, metodoPago })
-    });
-},
