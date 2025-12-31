@@ -38,18 +38,14 @@ const App = {
     async verificarTurno() {
         this.mostrarLoading();
         
-        // Primero intentar cargar turno local
-        if (Turno.init()) {
-            // Verificar si sigue activo en el servidor
-            const activo = await Turno.verificar();
-            if (activo) {
-                this.iniciarPOS();
-                return;
-            }
-        }
+        // SIEMPRE verificar en el servidor
+        const activo = await Turno.verificar();
         
-        // No hay turno activo, mostrar pantalla de turno
-        mostrarPantallaTurno();
+        if (activo) {
+            this.iniciarPOS();
+        } else {
+            mostrarPantallaTurno();
+        }
     },
     
     async iniciarPOS() {
