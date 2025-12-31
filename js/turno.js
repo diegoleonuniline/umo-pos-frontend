@@ -10,9 +10,24 @@ const Turno = {
         EUR: CONFIG.DEFAULT_RATES.EUR
     },
     
+    // Obtener clave única por usuario
+    getStorageKey() {
+        const odooId = Auth.getOdooId() || Auth.getId() || 'guest';
+        return 'umo_turno_' + odooId;
+    },
+    
+    getTasasKey() {
+        const odooId = Auth.getOdooId() || Auth.getId() || 'guest';
+        return 'umo_tasas_' + odooId;
+    },
+    
     init() {
-        // Cargar turno guardado
-        const turnoGuardado = localStorage.getItem('umo_turno');
+        // Solo cargar si hay usuario autenticado
+        if (!Auth.isAuthenticated()) {
+            return false;
+        }
+        
+        const turnoGuardado = localStorage.getItem(this.getStorageKey());
         if (turnoGuardado) {
             try {
                 this.actual = JSON.parse(turnoGuardado);
@@ -23,7 +38,7 @@ const Turno = {
                 };
                 return true;
             } catch (e) {
-                localStorage.removeItem('umo_turno');
+                localStorage.removeItem(this.getStorageKey());
             }
         }
         return false;
@@ -33,6 +48,12 @@ const Turno = {
         try {
             const usuario = Auth.getNombre();
             const sucursal = Auth.getSucursal();
+            
+            if (!usuario || !sucursal) {
+                console.error('No hay usuario o sucursal para verificar turno');
+                return false;
+            }
+            
             const result = await API.verificarTurnoActivo(usuario, sucursal);
             
             if (result.success && result.turnoActivo) {
@@ -42,9 +63,13 @@ const Turno = {
                     CAD: parseFloat(result.turnoActivo['CAD a MXN']) || CONFIG.DEFAULT_RATES.CAD,
                     EUR: parseFloat(result.turnoActivo['EUR a MXN']) || CONFIG.DEFAULT_RATES.EUR
                 };
-                localStorage.setItem('umo_turno', JSON.stringify(this.actual));
+                localStorage.setItem(this.getStorageKey(), JSON.stringify(this.actual));
                 return true;
             }
+            
+            // No hay turno activo, limpiar localStorage
+            localStorage.removeItem(this.getStorageKey());
+            this.actual = null;
             return false;
         } catch (error) {
             console.error('Error verificando turno:', error);
@@ -57,6 +82,7 @@ const Turno = {
             const result = await API.abrirTurno({
                 usuario: Auth.getNombre(),
                 sucursal: Auth.getSucursal(),
+                odooId: Auth.getOdooId(),
                 efectivoInicial: datos.mxn,
                 usdInicial: datos.usd,
                 cadInicial: datos.cad,
@@ -78,7 +104,7 @@ const Turno = {
                     CAD: datos.tasaCAD,
                     EUR: datos.tasaEUR
                 };
-                localStorage.setItem('umo_turno', JSON.stringify(this.actual));
+                localStorage.setItem(this.getStorageKey(), JSON.stringify(this.actual));
             }
             
             return result;
@@ -97,7 +123,7 @@ const Turno = {
             
             if (result.success) {
                 this.actual = null;
-                localStorage.removeItem('umo_turno');
+                localStorage.removeItem(this.getStorageKey());
             }
             
             return result;
@@ -105,6 +131,16 @@ const Turno = {
             console.error('Error cerrando turno:', error);
             throw error;
         }
+    },
+    
+    limpiar() {
+        this.actual = null;
+        this.tasas = {
+            USD: CONFIG.DEFAULT_RATES.USD,
+            CAD: CONFIG.DEFAULT_RATES.CAD,
+            EUR: CONFIG.DEFAULT_RATES.EUR
+        };
+        localStorage.removeItem(this.getStorageKey());
     },
     
     getTasa(moneda) {
@@ -132,8 +168,8 @@ function mostrarPantallaTurno() {
     document.getElementById('turno-usuario-nombre').textContent = Auth.getNombre();
     document.getElementById('turno-usuario-sucursal').textContent = Auth.getSucursal();
     
-    // Cargar tasas guardadas
-    const tasasGuardadas = localStorage.getItem('umo_tasas');
+    // Cargar tasas guardadas por usuario
+    const tasasGuardadas = localStorage.getItem(Turno.getTasasKey());
     if (tasasGuardadas) {
         try {
             const tasas = JSON.parse(tasasGuardadas);
@@ -165,8 +201,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 tasaEUR: parseFloat(document.getElementById('turno-tasa-eur').value) || CONFIG.DEFAULT_RATES.EUR
             };
             
-            // Guardar tasas
-            localStorage.setItem('umo_tasas', JSON.stringify({
+            // Guardar tasas por usuario
+            localStorage.setItem(Turno.getTasasKey(), JSON.stringify({
                 USD: datos.tasaUSD,
                 CAD: datos.tasaCAD,
                 EUR: datos.tasaEUR
