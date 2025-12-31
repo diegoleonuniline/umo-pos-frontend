@@ -8,6 +8,350 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* ===== AJUSTE 1: BUSCADOR LADO A LADO ===== */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 15px;
+        }
+        .panel-header h2 {
+            white-space: nowrap;
+            margin: 0;
+        }
+        .search-box {
+            flex: 1;
+            max-width: none;
+        }
+
+        /* ===== AJUSTE 2: MODAL CLIENTES CON TABS ===== */
+        .cliente-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 15px;
+        }
+        .cliente-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-500);
+            transition: all 0.2s;
+            position: relative;
+        }
+        .cliente-tab:hover {
+            color: var(--umo-dark);
+            background: var(--gray-50);
+        }
+        .cliente-tab.active {
+            color: var(--umo-dark);
+            font-weight: 600;
+        }
+        .cliente-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--umo-beige-dark);
+        }
+        .cliente-tab i {
+            margin-right: 8px;
+        }
+        .cliente-tab-content {
+            display: none;
+        }
+        .cliente-tab-content.active {
+            display: block;
+        }
+        .clientes-lista {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+        }
+
+        /* ===== AJUSTE 3: MODAL COBRO COMPACTO ===== */
+        .modal-cobro-compact {
+            max-width: 900px;
+        }
+        .modal-cobro-compact .modal-body {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 15px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+        .cobro-left {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .cobro-right {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .cobro-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 12px;
+            box-shadow: var(--shadow);
+        }
+        .cobro-section h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--umo-dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .cobro-cliente-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: var(--gray-50);
+            border-radius: var(--radius);
+        }
+        .cobro-cliente-info .nombre {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .cobro-cliente-info .grupo {
+            font-size: 11px;
+            color: var(--gray-500);
+        }
+        .cobro-descuento-activo {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border: 1px solid #4caf50;
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+        .cobro-descuento-activo .check {
+            color: var(--success);
+        }
+        .cobro-descuento-activo .porcentaje {
+            font-weight: 700;
+            color: var(--success);
+        }
+        .cobro-metodos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .cobro-metodo-btn {
+            padding: 8px 6px;
+            border: 1px solid var(--gray-200);
+            background: white;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 11px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .cobro-metodo-btn:hover {
+            border-color: var(--umo-beige);
+            background: var(--umo-beige-light);
+        }
+        .cobro-metodo-btn.active {
+            background: var(--umo-beige);
+            border-color: var(--umo-beige-dark);
+            font-weight: 600;
+        }
+        .cobro-monedas-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .cobro-moneda-btn {
+            padding: 8px;
+            border: 1px solid var(--gray-200);
+            background: white;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .cobro-moneda-btn:hover {
+            border-color: var(--umo-dark);
+        }
+        .cobro-moneda-btn.active {
+            background: var(--umo-dark);
+            color: white;
+            border-color: var(--umo-dark);
+        }
+        .cobro-monto-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .cobro-btn-agregar {
+            width: 100%;
+            padding: 10px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .cobro-btn-agregar:hover {
+            background: var(--success-dark);
+        }
+        .cobro-pagos-lista {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .cobro-pago-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        .cobro-pago-item .metodo {
+            font-weight: 500;
+        }
+        .cobro-pago-item .monto {
+            font-weight: 600;
+            color: var(--success);
+        }
+        .cobro-pago-item .eliminar {
+            color: var(--danger);
+            cursor: pointer;
+            padding: 4px;
+        }
+        .cobro-totales {
+            background: linear-gradient(135deg, var(--umo-dark), var(--umo-dark-light));
+            color: white;
+            padding: 12px;
+            border-radius: var(--radius);
+        }
+        .cobro-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .cobro-total-row.final {
+            font-size: 18px;
+            font-weight: 700;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            margin-top: 8px;
+        }
+        .cobro-total-row.descuento {
+            color: #81c784;
+        }
+        .cobro-pendiente {
+            background: white;
+            padding: 10px;
+            border-radius: var(--radius);
+            margin-top: 10px;
+        }
+        .cobro-pendiente-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .cobro-pendiente-row.pendiente {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        .cobro-pendiente-row.recibido {
+            color: var(--success);
+        }
+        .cobro-observaciones textarea {
+            width: 100%;
+            min-height: 50px;
+            padding: 8px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 12px;
+            resize: none;
+        }
+        .cobro-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .cobro-btn-cancelar {
+            flex: 1;
+            padding: 12px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .cobro-btn-confirmar {
+            flex: 2;
+            padding: 12px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .cobro-btn-confirmar:disabled {
+            background: var(--gray-400);
+            cursor: not-allowed;
+        }
+        .cobro-extra-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .cobro-extra-input label {
+            font-size: 11px;
+            color: var(--gray-500);
+            white-space: nowrap;
+        }
+        .cobro-extra-input input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 12px;
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .modal-cobro-compact .modal-body {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -206,6 +550,7 @@
             
             <!-- PANEL IZQUIERDO: PRODUCTOS -->
             <section class="products-panel">
+                <!-- AJUSTE 1: Buscador lado a lado con título -->
                 <div class="panel-header">
                     <h2><i class="fas fa-boxes"></i> Productos</h2>
                     <div class="search-box">
@@ -307,75 +652,242 @@
         </main>
     </div>
 
-    <!-- ========== MODAL: CLIENTES ========== -->
+    <!-- ========== MODAL: CLIENTES CON TABS ========== -->
     <div id="modal-clientes" class="modal-overlay">
         <div class="modal modal-md">
             <div class="modal-header">
-                <h3><i class="fas fa-users"></i> Seleccionar Cliente</h3>
+                <h3><i class="fas fa-users"></i> Cliente</h3>
                 <button class="btn-close" onclick="cerrarModal('modal-clientes')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="search-box mb-15">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="search-cliente" placeholder="Buscar por nombre, código, correo...">
-                </div>
-                
-                <div class="clientes-lista" id="clientes-lista">
-                    <div class="cliente-item" onclick="seleccionarCliente(null)">
-                        <div class="cliente-icon"><i class="fas fa-user-slash"></i></div>
-                        <div class="cliente-data">
-                            <strong>Cliente General</strong>
-                            <small>Sin datos de cliente</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="modal-divider">
-                    <span>o crear nuevo</span>
-                </div>
-                
-                <div class="nuevo-cliente-form" id="nuevo-cliente-form">
-                    <div class="form-row">
-                        <div class="field">
-                            <label>Código *</label>
-                            <input type="text" id="nuevo-cliente-codigo" placeholder="Ej: CLI001">
-                        </div>
-                        <div class="field">
-                            <label>Nombre *</label>
-                            <input type="text" id="nuevo-cliente-nombre" placeholder="Nombre completo">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="field">
-                            <label>Correo</label>
-                            <input type="email" id="nuevo-cliente-correo" placeholder="correo@ejemplo.com">
-                        </div>
-                        <div class="field">
-                            <label>Teléfono</label>
-                            <input type="tel" id="nuevo-cliente-telefono" placeholder="10 dígitos">
-                        </div>
-                    </div>
-                    <button class="btn btn-success btn-block" onclick="guardarNuevoCliente()">
-                        <i class="fas fa-plus"></i> Crear Cliente
+                <!-- AJUSTE 2: Tabs para buscar/agregar cliente -->
+                <div class="cliente-tabs">
+                    <button class="cliente-tab active" onclick="cambiarTabCliente('buscar')">
+                        <i class="fas fa-search"></i> Buscar Cliente
                     </button>
+                    <button class="cliente-tab" onclick="cambiarTabCliente('agregar')">
+                        <i class="fas fa-user-plus"></i> Agregar Nuevo
+                    </button>
+                </div>
+
+                <!-- TAB: Buscar Cliente -->
+                <div id="tab-buscar-cliente" class="cliente-tab-content active">
+                    <div class="search-box mb-15">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-cliente" placeholder="Buscar por nombre, código, correo...">
+                    </div>
+                    
+                    <div class="clientes-lista" id="clientes-lista">
+                        <div class="cliente-item" onclick="seleccionarCliente(null)">
+                            <div class="cliente-icon"><i class="fas fa-user-slash"></i></div>
+                            <div class="cliente-data">
+                                <strong>Cliente General</strong>
+                                <small>Sin datos de cliente</small>
+                            </div>
+                        </div>
+                        <!-- Los clientes se cargan dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- TAB: Agregar Cliente -->
+                <div id="tab-agregar-cliente" class="cliente-tab-content">
+                    <div class="nuevo-cliente-form">
+                        <div class="form-row">
+                            <div class="field">
+                                <label>Código *</label>
+                                <input type="text" id="nuevo-cliente-codigo" placeholder="Ej: CLI001">
+                            </div>
+                            <div class="field">
+                                <label>Nombre *</label>
+                                <input type="text" id="nuevo-cliente-nombre" placeholder="Nombre completo">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="field">
+                                <label>Correo</label>
+                                <input type="email" id="nuevo-cliente-correo" placeholder="correo@ejemplo.com">
+                            </div>
+                            <div class="field">
+                                <label>Teléfono</label>
+                                <input type="tel" id="nuevo-cliente-telefono" placeholder="10 dígitos">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="field">
+                                <label>Grupo de Cliente</label>
+                                <select id="nuevo-cliente-grupo">
+                                    <option value="">Seleccionar grupo...</option>
+                                    <option value="Cliente Local">Cliente Local</option>
+                                    <option value="Cliente Foráneo">Cliente Foráneo</option>
+                                    <option value="Mayorista">Mayorista</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>RFC (opcional)</label>
+                                <input type="text" id="nuevo-cliente-rfc" placeholder="RFC para factura">
+                            </div>
+                        </div>
+                        <button class="btn btn-success btn-block" onclick="guardarNuevoCliente()">
+                            <i class="fas fa-save"></i> Guardar Cliente
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ========== MODAL: COBRO ========== -->
+    <!-- ========== MODAL: COBRO COMPACTO ========== -->
     <div id="modal-cobro" class="modal-overlay">
-        <div class="modal modal-xl">
+        <div class="modal modal-cobro-compact">
             <div class="modal-header gradient">
                 <h3><i class="fas fa-cash-register"></i> Procesar Cobro</h3>
                 <button class="btn-close" onclick="cerrarModal('modal-cobro')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="modal-cobro-body">
-                <!-- Se llena dinámicamente por cobro.js -->
+            <div class="modal-body">
+                <!-- COLUMNA IZQUIERDA -->
+                <div class="cobro-left">
+                    <!-- Cliente -->
+                    <div class="cobro-section">
+                        <h4><i class="fas fa-user"></i> Cliente</h4>
+                        <div class="cobro-cliente-info">
+                            <div>
+                                <div class="nombre" id="cobro-cliente-nombre">Cliente General</div>
+                                <div class="grupo" id="cobro-cliente-grupo">Sin grupo</div>
+                            </div>
+                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 11px;" onclick="abrirModalClientes()">
+                                CAMBIAR
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sistema de Descuentos -->
+                    <div class="cobro-section">
+                        <h4><i class="fas fa-percent"></i> Sistema de Descuentos</h4>
+                        <div class="cobro-descuento-activo" id="cobro-descuento-activo" style="display:none;">
+                            <span><i class="fas fa-check-circle check"></i> <span id="cobro-descuento-nombre">Cliente Local + Efectivo</span></span>
+                            <span class="porcentaje" id="cobro-descuento-porcentaje">15%</span>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label style="font-size: 11px; color: var(--gray-500);">Tipo de Descuento</label>
+                            <select id="cobro-tipo-descuento" style="width: 100%; padding: 8px; margin-top: 4px; border-radius: var(--radius); border: 1px solid var(--gray-200);">
+                                <option value="">Automático según cliente y método</option>
+                                <option value="cliente_local_efectivo">Cliente Local Efectivo (0.15%)</option>
+                                <option value="cliente_foraneo">Cliente Foráneo (10%)</option>
+                                <option value="mayorista">Mayorista (20%)</option>
+                            </select>
+                        </div>
+                        <div class="cobro-extra-input">
+                            <label>Extra (MXN):</label>
+                            <input type="number" id="cobro-descuento-extra" value="0" min="0" step="0.01">
+                        </div>
+                        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: var(--radius); padding: 8px; margin-top: 8px; font-size: 10px; color: #856404;">
+                            <i class="fas fa-info-circle"></i> El descuento se calcula automáticamente según el grupo del cliente y método de pago.
+                        </div>
+                    </div>
+
+                    <!-- Métodos de Pago -->
+                    <div class="cobro-section">
+                        <h4><i class="fas fa-credit-card"></i> Métodos de Pago</h4>
+                        <div class="cobro-metodos-grid">
+                            <button class="cobro-metodo-btn active" data-metodo="efectivo" onclick="seleccionarMetodoPago('efectivo')">
+                                <i class="fas fa-money-bill-wave"></i><br>Efectivo
+                            </button>
+                            <button class="cobro-metodo-btn" data-metodo="transferencia" onclick="seleccionarMetodoPago('transferencia')">
+                                <i class="fas fa-exchange-alt"></i><br>Transferencia
+                            </button>
+                            <button class="cobro-metodo-btn" data-metodo="bbva_nacional" onclick="seleccionarMetodoPago('bbva_nacional')">
+                                <i class="fas fa-university"></i><br>BBVA Nal.
+                            </button>
+                            <button class="cobro-metodo-btn" data-metodo="bbva_internacional" onclick="seleccionarMetodoPago('bbva_internacional')">
+                                <i class="fas fa-globe"></i><br>BBVA Int.
+                            </button>
+                            <button class="cobro-metodo-btn" data-metodo="clip_nacional" onclick="seleccionarMetodoPago('clip_nacional')">
+                                <i class="fas fa-credit-card"></i><br>Clip Nal.
+                            </button>
+                            <button class="cobro-metodo-btn" data-metodo="clip_internacional" onclick="seleccionarMetodoPago('clip_internacional')">
+                                <i class="fas fa-credit-card"></i><br>Clip Int.
+                            </button>
+                        </div>
+                        <div class="cobro-monedas-grid">
+                            <button class="cobro-moneda-btn active" data-moneda="MXN" onclick="seleccionarMoneda('MXN')">MXN</button>
+                            <button class="cobro-moneda-btn" data-moneda="USD" onclick="seleccionarMoneda('USD')">USD</button>
+                            <button class="cobro-moneda-btn" data-moneda="CAD" onclick="seleccionarMoneda('CAD')">CAD</button>
+                            <button class="cobro-moneda-btn" data-moneda="EUR" onclick="seleccionarMoneda('EUR')">EUR</button>
+                        </div>
+                        <input type="number" class="cobro-monto-input" id="cobro-monto" placeholder="Monto recibido" min="0" step="0.01">
+                        <button class="cobro-btn-agregar" onclick="agregarPago()">
+                            <i class="fas fa-plus"></i> Agregar Pago
+                        </button>
+                    </div>
+
+                    <!-- Pagos Registrados -->
+                    <div class="cobro-section">
+                        <h4><i class="fas fa-list"></i> Pagos Registrados <span id="cobro-pagos-count" style="background: var(--success); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 5px;">0</span></h4>
+                        <div class="cobro-pagos-lista" id="cobro-pagos-lista">
+                            <div style="text-align: center; color: var(--gray-400); padding: 20px; font-size: 12px; border: 1px dashed var(--gray-200); border-radius: var(--radius);">
+                                No hay pagos registrados aún<br>
+                                <small>Agregue un método de pago para continuar</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA -->
+                <div class="cobro-right">
+                    <!-- Totales -->
+                    <div class="cobro-totales">
+                        <div class="cobro-total-row">
+                            <span>Subtotal:</span>
+                            <span id="cobro-subtotal">$0.00</span>
+                        </div>
+                        <div class="cobro-total-row descuento">
+                            <span>Descuento:</span>
+                            <span id="cobro-descuento">-$0.00</span>
+                        </div>
+                        <div class="cobro-total-row final">
+                            <span>TOTAL A PAGAR:</span>
+                            <span id="cobro-total">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Pendiente -->
+                    <div class="cobro-pendiente">
+                        <div class="cobro-pendiente-row recibido">
+                            <span>Total Recibido:</span>
+                            <span id="cobro-recibido">$0.00 MXN</span>
+                        </div>
+                        <div class="cobro-pendiente-row pendiente">
+                            <span>Pendiente:</span>
+                            <span id="cobro-pendiente">$0.00 MXN</span>
+                        </div>
+                    </div>
+
+                    <!-- Cambio (si aplica) -->
+                    <div id="cobro-cambio-section" style="display: none; background: linear-gradient(135deg, var(--success), var(--success-dark)); color: white; padding: 15px; border-radius: var(--radius); text-align: center;">
+                        <div style="font-size: 14px;">CAMBIO</div>
+                        <div id="cobro-cambio" style="font-size: 28px; font-weight: 700;">$0.00</div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="cobro-section cobro-observaciones">
+                        <h4><i class="fas fa-sticky-note"></i> Observaciones</h4>
+                        <textarea id="cobro-notas" placeholder="Notas de la venta (opcional)"></textarea>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="cobro-actions">
+                        <button class="cobro-btn-cancelar" onclick="cerrarModal('modal-cobro')">
+                            <i class="fas fa-times"></i> CANCELAR
+                        </button>
+                        <button class="cobro-btn-confirmar" id="btn-confirmar-venta" onclick="confirmarVenta()" disabled>
+                            <i class="fas fa-check"></i> CONFIRMAR VENTA
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -497,5 +1009,111 @@
     <script src="js/carrito.js"></script>
     <script src="js/cobro.js"></script>
     <script src="js/app.js"></script>
+    
+    <script>
+        // Función para cambiar tabs de cliente
+        function cambiarTabCliente(tab) {
+            // Remover active de todos los tabs
+            document.querySelectorAll('.cliente-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.cliente-tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Activar tab seleccionado
+            if (tab === 'buscar') {
+                document.querySelector('.cliente-tab:first-child').classList.add('active');
+                document.getElementById('tab-buscar-cliente').classList.add('active');
+            } else {
+                document.querySelector('.cliente-tab:last-child').classList.add('active');
+                document.getElementById('tab-agregar-cliente').classList.add('active');
+            }
+        }
+
+        // Variables globales para el cobro
+        let metodoPagoSeleccionado = 'efectivo';
+        let monedaSeleccionada = 'MXN';
+        let pagosRegistrados = [];
+
+        function seleccionarMetodoPago(metodo) {
+            metodoPagoSeleccionado = metodo;
+            document.querySelectorAll('.cobro-metodo-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.metodo === metodo);
+            });
+        }
+
+        function seleccionarMoneda(moneda) {
+            monedaSeleccionada = moneda;
+            document.querySelectorAll('.cobro-moneda-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.moneda === moneda);
+            });
+        }
+
+        function agregarPago() {
+            const monto = parseFloat(document.getElementById('cobro-monto').value) || 0;
+            if (monto <= 0) {
+                mostrarToast('Ingrese un monto válido', 'error');
+                return;
+            }
+
+            const metodosNombres = {
+                'efectivo': 'Efectivo',
+                'transferencia': 'Transferencia',
+                'bbva_nacional': 'BBVA Nacional',
+                'bbva_internacional': 'BBVA Internacional',
+                'clip_nacional': 'Clip Nacional',
+                'clip_internacional': 'Clip Internacional'
+            };
+
+            pagosRegistrados.push({
+                metodo: metodoPagoSeleccionado,
+                metodoNombre: metodosNombres[metodoPagoSeleccionado],
+                moneda: monedaSeleccionada,
+                monto: monto
+            });
+
+            actualizarListaPagos();
+            document.getElementById('cobro-monto').value = '';
+        }
+
+        function eliminarPago(index) {
+            pagosRegistrados.splice(index, 1);
+            actualizarListaPagos();
+        }
+
+        function actualizarListaPagos() {
+            const lista = document.getElementById('cobro-pagos-lista');
+            const count = document.getElementById('cobro-pagos-count');
+            
+            count.textContent = pagosRegistrados.length;
+
+            if (pagosRegistrados.length === 0) {
+                lista.innerHTML = `
+                    <div style="text-align: center; color: var(--gray-400); padding: 20px; font-size: 12px; border: 1px dashed var(--gray-200); border-radius: var(--radius);">
+                        No hay pagos registrados aún<br>
+                        <small>Agregue un método de pago para continuar</small>
+                    </div>
+                `;
+                document.getElementById('btn-confirmar-venta').disabled = true;
+                return;
+            }
+
+            lista.innerHTML = pagosRegistrados.map((pago, i) => `
+                <div class="cobro-pago-item">
+                    <div>
+                        <div class="metodo">${pago.metodoNombre}</div>
+                        <div style="font-size: 10px; color: var(--gray-500);">${pago.moneda}</div>
+                    </div>
+                    <div class="monto">$${pago.monto.toFixed(2)}</div>
+                    <span class="eliminar" onclick="eliminarPago(${i})"><i class="fas fa-times"></i></span>
+                </div>
+            `).join('');
+
+            // Calcular total recibido y pendiente
+            // (esto sería más complejo con conversión de monedas)
+            const totalRecibido = pagosRegistrados.reduce((sum, p) => sum + p.monto, 0);
+            document.getElementById('cobro-recibido').textContent = `$${totalRecibido.toFixed(2)} MXN`;
+            
+            // Habilitar botón si hay pagos
+            document.getElementById('btn-confirmar-venta').disabled = pagosRegistrados.length === 0;
+        }
+    </script>
 </body>
 </html>
