@@ -2773,3 +2773,23 @@ input:focus, select:focus, textarea:focus {
         top: 0;
     }
 }
+/* BOTÓN SYNC */
+.btn-sync { 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+    padding: 8px 12px; 
+    background: white; 
+    color: var(--umo-dark); 
+    border: 1px solid var(--gray-200); 
+    border-radius: var(--radius); 
+    cursor: pointer; 
+    font-size: 12px; 
+    font-weight: 500; 
+    transition: all 0.2s; 
+}
+.btn-sync:hover { background: var(--gray-50); border-color: var(--umo-beige); }
+.btn-sync:disabled { opacity: 0.6; cursor: wait; }
+.btn-sync i { font-size: 14px; }
+.btn-sync i.fa-spin { animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
