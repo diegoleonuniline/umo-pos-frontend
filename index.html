@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMO - Punto de Venta</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ========== PANTALLA LOGIN ========== -->
+    <div id="login-screen" class="screen login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h1>UMO</h1>
+                <p>Sistema Punto de Venta</p>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="field">
+                    <label for="login-empleado">ID Empleado</label>
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="login-empleado" placeholder="Ingresa tu ID" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="login-pin">PIN de Acceso</label>
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="login-pin" placeholder="••••" required autocomplete="off">
+                    </div>
+                </div>
+                <div id="login-error" class="error-msg"></div>
+                <button type="submit" id="login-btn" class="btn btn-primary btn-block">
+                    <span>Iniciar Sesión</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+            <footer>© 2025 UMO POS</footer>
+        </div>
+    </div>
+
+    <!-- ========== PANTALLA LOADING ========== -->
+    <div id="loading-screen" class="screen loading-screen" style="display:none">
+        <div class="loading-content">
+            <div class="logo-icon">
+                <i class="fas fa-store"></i>
+            </div>
+            <h1>UMO</h1>
+            <div class="loader"></div>
+            <p>Cargando datos...</p>
+        </div>
+    </div>
+
+    <!-- ========== PANTALLA TURNO ========== -->
+    <div id="turno-screen" class="screen turno-screen" style="display:none">
+        <div class="turno-card">
+            <div class="turno-header">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h1>Abrir Turno</h1>
+                <p>Ingresa los datos para iniciar tu turno</p>
+            </div>
+            
+            <div class="turno-user-info">
+                <i class="fas fa-user-circle"></i>
+                <div>
+                    <strong id="turno-usuario-nombre">Usuario</strong>
+                    <small id="turno-usuario-sucursal">Sucursal</small>
+                </div>
+            </div>
+
+            <form id="turno-form" class="turno-form">
+                <div class="turno-section">
+                    <h3><i class="fas fa-dollar-sign"></i> Efectivo Inicial</h3>
+                    <div class="turno-grid">
+                        <div class="field">
+                            <label>MXN (Pesos)</label>
+                            <div class="input-money">
+                                <span>$</span>
+                                <input type="number" id="turno-mxn" value="0" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>USD (Dólares)</label>
+                            <div class="input-money">
+                                <span>$</span>
+                                <input type="number" id="turno-usd" value="0" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>CAD (Canadienses)</label>
+                            <div class="input-money">
+                                <span>$</span>
+                                <input type="number" id="turno-cad" value="0" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>EUR (Euros)</label>
+                            <div class="input-money">
+                                <span>€</span>
+                                <input type="number" id="turno-eur" value="0" min="0" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="turno-section">
+                    <h3><i class="fas fa-exchange-alt"></i> Tasas de Cambio</h3>
+                    <div class="turno-grid">
+                        <div class="field">
+                            <label>1 USD = MXN</label>
+                            <input type="number" id="turno-tasa-usd" value="17.50" min="0" step="0.01">
+                        </div>
+                        <div class="field">
+                            <label>1 CAD = MXN</label>
+                            <input type="number" id="turno-tasa-cad" value="13.00" min="0" step="0.01">
+                        </div>
+                        <div class="field">
+                            <label>1 EUR = MXN</label>
+                            <input type="number" id="turno-tasa-eur" value="19.00" min="0" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="turno-error" class="error-msg"></div>
+                
+                <div class="turno-actions">
+                    <button type="button" class="btn btn-outline" onclick="cerrarSesion()">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </button>
+                    <button type="submit" id="turno-btn" class="btn btn-success">
+                        <i class="fas fa-play"></i>
+                        <span>Abrir Turno</span>
+                        <div class="spinner"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== APP PRINCIPAL ========== -->
+    <div id="app" class="app" style="display:none">
+        
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon small">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <span>UMO</span>
+                </div>
+                <div class="turno-status">
+                    <i class="fas fa-clock"></i>
+                    <span>Turno: <strong id="header-turno-id">-</strong></span>
+                </div>
+            </div>
+            
+            <div class="header-center">
+                <div class="tasas-display">
+                    <span><strong>USD:</strong> $<span id="header-tasa-usd">17.50</span></span>
+                    <span><strong>CAD:</strong> $<span id="header-tasa-cad">13.00</span></span>
+                    <span><strong>EUR:</strong> €<span id="header-tasa-eur">19.00</span></span>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="user-pill" id="user-pill">
+                    <div class="avatar" id="user-avatar">US</div>
+                    <div class="user-text">
+                        <span id="user-name">Usuario</span>
+                        <small id="user-sucursal">Sucursal</small>
+                    </div>
+                </div>
+                <button class="btn-icon" onclick="abrirModalCerrarTurno()" title="Cerrar Turno">
+                    <i class="fas fa-cash-register"></i>
+                </button>
+                <button class="btn-icon danger" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="main-content">
+            
+            <!-- PANEL IZQUIERDO: PRODUCTOS -->
+            <section class="panel-products">
+                <div class="section-header">
+                    <h2><i class="fas fa-boxes"></i> Productos</h2>
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-producto" placeholder="Buscar por código o nombre...">
+                    </div>
+                </div>
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="productos-tbody">
+                            <tr>
+                                <td colspan="5" class="loading-cell">
+                                    <div class="loader small"></div>
+                                    <span>Cargando productos...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PANEL DERECHO: CARRITO -->
+            <section class="panel-cart">
+                <div class="section-header">
+                    <h2><i class="fas fa-shopping-cart"></i> Venta Actual</h2>
+                    <div class="cliente-selector" onclick="abrirModalClientes()">
+                        <i class="fas fa-user"></i>
+                        <span id="cliente-nombre">Cliente General</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <div class="cart-items" id="cart-items">
+                    <div class="cart-empty">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Carrito vacío</p>
+                        <small>Agrega productos para comenzar</small>
+                    </div>
+                </div>
+
+                <div class="cart-summary" id="cart-summary" style="display:none">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-row discount">
+                        <span>Descuento:</span>
+                        <span id="cart-descuento">-$0.00</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>TOTAL:</span>
+                        <span id="cart-total">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="cart-actions">
+                    <button class="btn btn-outline" onclick="limpiarCarrito()">
+                        <i class="fas fa-trash"></i> Limpiar
+                    </button>
+                    <button class="btn btn-success btn-lg" onclick="abrirModalCobro()" id="btn-cobrar" disabled>
+                        <i class="fas fa-cash-register"></i> Cobrar
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ========== MODAL: COBRO ========== -->
+    <div id="modal-cobro" class="modal-overlay">
+        <div class="modal modal-lg">
+            <div class="modal-header gradient">
+                <h3><i class="fas fa-cash-register"></i> Procesar Cobro</h3>
+                <button class="btn-close" onclick="cerrarModal('modal-cobro')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-cobro-body">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: CERRAR TURNO ========== -->
+    <div id="modal-cerrar-turno" class="modal-overlay">
+        <div class="modal modal-lg">
+            <div class="modal-header danger">
+                <h3><i class="fas fa-cash-register"></i> Cerrar Turno - Corte de Caja</h3>
+                <button class="btn-close" onclick="cerrarModal('modal-cerrar-turno')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-cerrar-turno-body">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: CLIENTES ========== -->
+    <div id="modal-clientes" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> Seleccionar Cliente</h3>
+                <button class="btn-close" onclick="cerrarModal('modal-clientes')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="search-bar" style="margin-bottom: 15px;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-cliente" placeholder="Buscar cliente...">
+                </div>
+                <div class="clientes-lista" id="clientes-lista">
+                    <div class="cliente-item" onclick="seleccionarCliente(null)">
+                        <i class="fas fa-user-slash"></i>
+                        <div>
+                            <strong>Cliente General</strong>
+                            <small>Sin datos de cliente</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: ÉXITO ========== -->
+    <div id="modal-exito" class="modal-overlay">
+        <div class="modal modal-sm modal-success">
+            <div class="success-content">
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h2>¡Venta Exitosa!</h2>
+                <div class="success-details">
+                    <p>Ticket: <strong id="exito-ticket">#0001</strong></p>
+                    <p>Total: <strong id="exito-total">$0.00</strong></p>
+                    <p>Cambio: <strong id="exito-cambio">$0.00</strong></p>
+                </div>
+                <div class="success-actions">
+                    <button class="btn btn-outline" onclick="imprimirTicket()">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                    <button class="btn btn-primary" onclick="cerrarModalExito()">
+                        <i class="fas fa-plus"></i> Nueva Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TOAST ========== -->
+    <div id="toast" class="toast"></div>
+
+    <!-- SCRIPTS -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/turno.js"></script>
+    <script src="js/productos.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/cobro.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
