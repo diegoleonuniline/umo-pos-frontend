@@ -173,8 +173,17 @@ const Cobro = {
         const cliente = Clientes.seleccionado;
         const grupoCliente = cliente ? cliente.grupo : '';
         
+        console.log('=== calcularDescuentoAutomatico ===');
+        console.log('grupoCliente:', grupoCliente);
+        console.log('metodoSeleccionado:', this.metodoSeleccionado);
+        
         try {
             const result = await API.calcularDescuento(grupoCliente, this.metodoSeleccionado);
+            
+            console.log('API result:', result);
+            console.log('result.id:', result.id);
+            console.log('result.porcentaje:', result.porcentaje);
+            console.log('result.descripcion:', result.descripcion);
             
             const activoEl = document.getElementById('cobro-descuento-activo');
             const nombreEl = document.getElementById('cobro-descuento-nombre');
@@ -195,10 +204,13 @@ const Cobro = {
                     descripcion: result.descripcion,
                     id: result.id
                 };
+                
+                console.log('✅ descuentoAplicado guardado:', this.descuentoAplicado);
             } else {
                 if (activoEl) activoEl.style.display = 'none';
                 Carrito.tipoDescuento = 'Ninguno';
                 this.descuentoAplicado = null;
+                console.log('❌ Sin descuento aplicado');
             }
             
             this.actualizarTotalesUI();
@@ -299,6 +311,10 @@ const Cobro = {
             const observaciones = document.getElementById('cobro-notas')?.value?.trim() || '';
             const cliente = Clientes.seleccionado;
             
+            console.log('=== PROCESANDO VENTA ===');
+            console.log('this.descuentoAplicado:', this.descuentoAplicado);
+            console.log('TipoDescuento a enviar:', this.descuentoAplicado ? this.descuentoAplicado.id : '');
+            
             const ventaData = {
                 IdVenta: idVenta,
                 Sucursal: Auth.getSucursal(),
@@ -311,6 +327,8 @@ const Cobro = {
                 GrupoCliente: cliente ? cliente.grupo : '',
                 TurnoId: Turno.getId()
             };
+            
+            console.log('ventaData completa:', ventaData);
             
             const detalles = Carrito.items.map((item, index) => {
                 const subtotal = item.precio * item.cantidad;
