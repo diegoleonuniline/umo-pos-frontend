@@ -1,7 +1,6 @@
 // ============================================
 // UMO POS - AUTENTICACIÓN
 // ============================================
-
 const Auth = {
     usuario: null,
     
@@ -31,14 +30,33 @@ const Auth = {
     },
     
     logout() {
+        // Limpiar turno del usuario actual antes de cerrar sesión
+        if (this.usuario) {
+            const odooId = this.getOdooId() || this.getId();
+            if (odooId) {
+                localStorage.removeItem('umo_turno_' + odooId);
+            }
+        }
+        
         this.usuario = null;
         localStorage.removeItem('umo_sesion');
-        localStorage.removeItem('umo_turno');
         window.location.reload();
+    },
+    
+    isAuthenticated() {
+        return this.usuario !== null;
     },
     
     getUsuario() {
         return this.usuario;
+    },
+    
+    getId() {
+        return this.usuario?.id || this.usuario?.empleadoId || null;
+    },
+    
+    getOdooId() {
+        return this.usuario?.odooId || this.usuario?.odoo_id || this.usuario?.id || null;
     },
     
     getNombre() {
