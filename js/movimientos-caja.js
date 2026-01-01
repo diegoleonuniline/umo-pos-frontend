@@ -18,9 +18,9 @@ const MovimientosCaja = {
     async cargarCatalogos() {
         try {
             const [catRes, concRes, bancosRes] = await Promise.all([
-                fetch(`${API_BASE}/categorias`),
-                fetch(`${API_BASE}/conceptos`),
-                fetch(`${API_BASE}/bancos`)
+                fetch(`${CONFIG.API_URL}/api/categorias`),
+                fetch(`${CONFIG.API_URL}/api/conceptos`),
+                fetch(`${CONFIG.API_URL}/api/bancos`)
             ]);
 
             const catData = await catRes.json();
@@ -152,7 +152,7 @@ const MovimientosCaja = {
         try {
             const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
             
-            const response = await fetch(`${API_BASE}/movimientos-caja`, {
+            const response = await fetch(`${CONFIG.API_URL}/api/movimientos-caja`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
