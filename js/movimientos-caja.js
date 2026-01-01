@@ -3,9 +3,6 @@
 // ============================================
 const MovimientosCaja = {
     tipo: 'Deposito',
-    categorias: [],
-    conceptos: [],
-    bancos: [],
 
     async abrir() {
         await this.cargarCatalogos();
@@ -27,9 +24,13 @@ const MovimientosCaja = {
             const concData = await concRes.json();
             const bancosData = await bancosRes.json();
 
-            this.categorias = catData.success ? catData.categorias : [];
-            this.conceptos = concData.success ? concData.conceptos : [];
-            this.bancos = bancosData.success ? bancosData.bancos : [];
+            window._movCategorias = catData.success ? catData.categorias : [];
+            window._movConceptos = concData.success ? concData.conceptos : [];
+            window._movBancos = bancosData.success ? bancosData.bancos : [];
+
+            console.log('Categorías:', window._movCategorias.length);
+            console.log('Conceptos:', window._movConceptos.length);
+            console.log('Bancos:', window._movBancos.length);
 
             this.llenarSelects();
         } catch (error) {
@@ -42,14 +43,14 @@ const MovimientosCaja = {
         // Categorías
         const selCat = document.getElementById('mov-categoria');
         selCat.innerHTML = '<option value="">Seleccionar...</option>';
-        this.categorias.forEach(c => {
+        (window._movCategorias || []).forEach(c => {
             selCat.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
         });
 
         // Conceptos (todos inicialmente)
         const selConc = document.getElementById('mov-concepto');
         selConc.innerHTML = '<option value="">Seleccionar...</option>';
-        this.conceptos.forEach(c => {
+        (window._movConceptos || []).forEach(c => {
             selConc.innerHTML += `<option value="${c.id}" data-categoria="${c.categoria}">${c.nombre}</option>`;
         });
 
@@ -60,7 +61,7 @@ const MovimientosCaja = {
         selOrigen.innerHTML = '<option value="">Seleccionar...</option>';
         selDestino.innerHTML = '<option value="">Seleccionar...</option>';
         
-        this.bancos.forEach(b => {
+        (window._movBancos || []).forEach(b => {
             selOrigen.innerHTML += `<option value="${b.id}">${b.nombre}</option>`;
             selDestino.innerHTML += `<option value="${b.id}">${b.nombre}</option>`;
         });
@@ -72,9 +73,10 @@ const MovimientosCaja = {
         
         selConc.innerHTML = '<option value="">Seleccionar...</option>';
         
+        const conceptos = window._movConceptos || [];
         const conceptosFiltrados = categoriaId 
-            ? this.conceptos.filter(c => c.categoria.toLowerCase() === categoriaId.toLowerCase())
-            : this.conceptos;
+            ? conceptos.filter(c => c.categoria.toLowerCase() === categoriaId.toLowerCase())
+            : conceptos;
         
         conceptosFiltrados.forEach(c => {
             selConc.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
