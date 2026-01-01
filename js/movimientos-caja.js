@@ -152,8 +152,6 @@ const MovimientosCaja = {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
         try {
-            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
-            
             const response = await fetch(`${CONFIG.API_URL}/api/movimientos-caja`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -165,8 +163,8 @@ const MovimientosCaja = {
                     categoria,
                     concepto,
                     notas,
-                    sucursal: usuario.sucursal || '',
-                    usuario: usuario.id || ''
+                    sucursal: Auth.usuario?.sucursal || '',
+                    usuario: Auth.usuario?.id || ''
                 })
             });
 
