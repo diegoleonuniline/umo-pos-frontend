@@ -1,1070 +1,187 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMO - Punto de Venta</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <style>
-        /* ============================================ */
-        /* ESTILOS GENERALES INLINE */
-        /* ============================================ */
-        .panel-header { display: flex; align-items: center; gap: 15px; padding: 10px 15px; }
-        .panel-header h2 { white-space: nowrap; margin: 0; }
-        .search-box { flex: 1; max-width: none; }
+// ============================================
+// MOVIMIENTOS DE CAJA
+// ============================================
+const MovimientosCaja = {
+    tipo: 'Deposito',
+    categorias: [],
+    conceptos: [],
+    bancos: [],
+
+    async abrir() {
+        await this.cargarCatalogos();
+        this.tipo = 'Deposito';
+        this.actualizarUI();
+        this.limpiarFormulario();
+        document.getElementById('modal-movimientos-caja').classList.add('active');
+    },
+
+    async cargarCatalogos() {
+        try {
+            const [catRes, concRes, bancosRes] = await Promise.all([
+                fetch(`${API_BASE}/categorias`),
+                fetch(`${API_BASE}/conceptos`),
+                fetch(`${API_BASE}/bancos`)
+            ]);
+
+            const catData = await catRes.json();
+            const concData = await concRes.json();
+            const bancosData = await bancosRes.json();
+
+            this.categorias = catData.success ? catData.categorias : [];
+            this.conceptos = concData.success ? concData.conceptos : [];
+            this.bancos = bancosData.success ? bancosData.bancos : [];
+
+            this.llenarSelects();
+        } catch (error) {
+            console.error('Error cargando catálogos:', error);
+            mostrarToast('Error cargando datos', 'error');
+        }
+    },
+
+    llenarSelects() {
+        // Categorías
+        const selCat = document.getElementById('mov-categoria');
+        selCat.innerHTML = '<option value="">Seleccionar...</option>';
+        this.categorias.forEach(c => {
+            selCat.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+        });
+
+        // Conceptos (todos inicialmente)
+        const selConc = document.getElementById('mov-concepto');
+        selConc.innerHTML = '<option value="">Seleccionar...</option>';
+        this.conceptos.forEach(c => {
+            selConc.innerHTML += `<option value="${c.id}" data-categoria="${c.categoria}">${c.nombre}</option>`;
+        });
+
+        // Bancos (origen y destino)
+        const selOrigen = document.getElementById('mov-origen');
+        const selDestino = document.getElementById('mov-destino');
         
-        /* Tabs de cliente */
-        .cliente-tabs { display: flex; border-bottom: 2px solid var(--gray-200); margin-bottom: 15px; }
-        .cliente-tab { flex: 1; padding: 12px 20px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--gray-500); transition: all 0.2s; position: relative; }
-        .cliente-tab:hover { color: var(--umo-dark); background: var(--gray-50); }
-        .cliente-tab.active { color: var(--umo-dark); font-weight: 600; }
-        .cliente-tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: var(--umo-beige-dark); }
-        .cliente-tab i { margin-right: 8px; }
-        .cliente-tab-content { display: none; }
-        .cliente-tab-content.active { display: block; }
-        .clientes-lista { max-height: 350px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: var(--radius); }
-
-        /* ============================================ */
-        /* MODAL COBRO COMPACTO */
-        /* ============================================ */
-        .modal-cobro-compact { max-width: 900px; }
-        .modal-cobro-compact .modal-body { padding: 15px; display: grid; grid-template-columns: 1fr 280px; gap: 15px; max-height: 75vh; overflow-y: auto; }
-        .cobro-left { display: flex; flex-direction: column; gap: 12px; }
-        .cobro-right { display: flex; flex-direction: column; gap: 12px; }
-        .cobro-section { background: white; border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
-        .cobro-section h4 { font-size: 13px; font-weight: 600; color: var(--umo-dark); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--gray-200); }
-        .cobro-cliente-info { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--gray-50); border-radius: var(--radius); }
-        .cobro-cliente-info .nombre { font-weight: 600; font-size: 13px; }
-        .cobro-cliente-info .grupo { font-size: 11px; color: var(--gray-500); }
-        .cobro-descuento-activo { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border: 1px solid #4caf50; border-radius: var(--radius); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
-        .cobro-descuento-activo .check { color: var(--success); }
-        .cobro-descuento-activo .porcentaje { font-weight: 700; color: var(--success); }
-        .cobro-metodos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .cobro-metodo-btn { padding: 8px 6px; border: 1px solid var(--gray-200); background: white; border-radius: var(--radius); cursor: pointer; font-size: 11px; text-align: center; transition: all 0.2s; }
-        .cobro-metodo-btn:hover { border-color: var(--umo-beige); background: var(--umo-beige-light); }
-        .cobro-metodo-btn.active { background: var(--umo-beige); border-color: var(--umo-beige-dark); font-weight: 600; }
-        .cobro-monedas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
-        .cobro-moneda-btn { padding: 8px; border: 1px solid var(--gray-200); background: white; border-radius: var(--radius); cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-        .cobro-moneda-btn:hover { border-color: var(--umo-dark); }
-        .cobro-moneda-btn.active { background: var(--umo-dark); color: white; border-color: var(--umo-dark); }
-        .cobro-monto-input { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 14px; margin-top: 10px; }
-        .cobro-btn-agregar { width: 100%; padding: 10px; background: var(--success); color: white; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 10px; }
-        .cobro-btn-agregar:hover { background: var(--success-dark); }
-        .cobro-pagos-lista { max-height: 120px; overflow-y: auto; }
-        .cobro-pago-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--gray-50); border-radius: var(--radius); margin-bottom: 6px; font-size: 12px; }
-        .cobro-pago-item .metodo { font-weight: 500; }
-        .cobro-pago-item .monto { font-weight: 600; color: var(--success); }
-        .cobro-pago-item .eliminar { color: var(--danger); cursor: pointer; padding: 4px; }
-        .cobro-totales { background: linear-gradient(135deg, var(--umo-dark), var(--umo-dark-light)); color: white; padding: 12px; border-radius: var(--radius); }
-        .cobro-total-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
-        .cobro-total-row.final { font-size: 18px; font-weight: 700; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 8px; }
-        .cobro-total-row.descuento { color: #81c784; }
-        .cobro-pendiente { background: white; padding: 10px; border-radius: var(--radius); margin-top: 10px; }
-        .cobro-pendiente-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
-        .cobro-pendiente-row.pendiente { color: var(--danger); font-weight: 600; }
-        .cobro-pendiente-row.recibido { color: var(--success); }
-        .cobro-observaciones textarea { width: 100%; min-height: 50px; padding: 8px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 12px; resize: none; }
-        .cobro-actions { display: flex; gap: 10px; margin-top: 10px; }
-        .cobro-btn-cancelar { flex: 1; padding: 12px; background: var(--danger); color: white; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 600; }
-        .cobro-btn-confirmar { flex: 2; padding: 12px; background: var(--success); color: white; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 600; }
-        .cobro-btn-confirmar:disabled { background: var(--gray-400); cursor: not-allowed; }
-        .cobro-extra-input { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-        .cobro-extra-input label { font-size: 11px; color: var(--gray-500); white-space: nowrap; }
-        .cobro-extra-input input { flex: 1; padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 12px; text-align: right; }
-
-        /* ============================================ */
-        /* BOTÓN SYNC */
-        /* ============================================ */
-        .btn-sync { 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            padding: 8px 12px; 
-            background: white; 
-            color: var(--umo-dark); 
-            border: 1px solid var(--gray-200); 
-            border-radius: var(--radius); 
-            cursor: pointer; 
-            font-size: 12px; 
-            font-weight: 500; 
-            transition: all 0.2s; 
-        }
-        .btn-sync:hover { background: var(--gray-50); border-color: var(--umo-beige); }
-        .btn-sync:disabled { opacity: 0.6; cursor: wait; }
-        .btn-sync i { font-size: 14px; }
-        .btn-sync i.fa-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* ============================================ */
-        /* BOTÓN MOVIMIENTOS CAJA */
-        /* ============================================ */
-        .btn-movimientos {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 12px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn-movimientos:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
-        .btn-movimientos i { font-size: 14px; }
-
-        /* ============================================ */
-        /* MODAL MOVIMIENTOS CAJA */
-        /* ============================================ */
-        .modal-movimientos { max-width: 500px; }
-        .mov-tipo-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .mov-tipo-btn { 
-            flex: 1; 
-            padding: 15px; 
-            border: 2px solid var(--gray-200); 
-            background: white; 
-            border-radius: var(--radius); 
-            cursor: pointer; 
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .mov-tipo-btn:hover { border-color: var(--gray-300); }
-        .mov-tipo-btn.active.deposito { border-color: var(--success); background: rgba(76, 175, 80, 0.1); }
-        .mov-tipo-btn.active.retiro { border-color: var(--danger); background: rgba(244, 67, 54, 0.1); }
-        .mov-tipo-btn i { font-size: 24px; display: block; margin-bottom: 8px; }
-        .mov-tipo-btn.deposito i { color: var(--success); }
-        .mov-tipo-btn.retiro i { color: var(--danger); }
-        .mov-tipo-btn span { font-weight: 600; font-size: 14px; }
+        selOrigen.innerHTML = '<option value="">Seleccionar...</option>';
+        selDestino.innerHTML = '<option value="">Seleccionar...</option>';
         
-        .mov-form-group { margin-bottom: 15px; }
-        .mov-form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
-        .mov-form-group select, .mov-form-group input, .mov-form-group textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius);
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-        .mov-form-group select:focus, .mov-form-group input:focus, .mov-form-group textarea:focus {
-            outline: none;
-            border-color: var(--umo-beige-dark);
-        }
-        .mov-form-group textarea { min-height: 60px; resize: none; }
-        .mov-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        this.bancos.forEach(b => {
+            selOrigen.innerHTML += `<option value="${b.id}">${b.nombre}</option>`;
+            selDestino.innerHTML += `<option value="${b.id}">${b.nombre}</option>`;
+        });
+    },
+
+    filtrarConceptos() {
+        const categoriaId = document.getElementById('mov-categoria').value;
+        const selConc = document.getElementById('mov-concepto');
         
-        .mov-monto-input { 
-            font-size: 24px; 
-            font-weight: 700; 
-            text-align: center; 
-            padding: 15px;
-            background: var(--gray-50);
-        }
-        .mov-monto-input:focus { background: white; }
+        selConc.innerHTML = '<option value="">Seleccionar...</option>';
         
-        .mov-actions { display: flex; gap: 10px; margin-top: 20px; }
-        .mov-btn-cancelar { 
-            flex: 1; 
-            padding: 12px; 
-            background: var(--gray-100); 
-            color: var(--gray-700); 
-            border: none; 
-            border-radius: var(--radius); 
-            cursor: pointer; 
-            font-weight: 600;
-        }
-        .mov-btn-guardar { 
-            flex: 2; 
-            padding: 12px; 
-            background: var(--success); 
-            color: white; 
-            border: none; 
-            border-radius: var(--radius); 
-            cursor: pointer; 
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .mov-btn-guardar:disabled { background: var(--gray-400); cursor: not-allowed; }
-        .mov-btn-guardar.retiro { background: var(--danger); }
-        .mov-btn-guardar.deposito { background: var(--success); }
-
-        /* ============================================ */
-        /* MODAL VENTAS TURNO */
-        /* ============================================ */
-        .modal-ventas-turno { max-width: 950px; }
-        .modal-ventas-turno .modal-body { padding: 0; }
+        const conceptosFiltrados = categoriaId 
+            ? this.conceptos.filter(c => c.categoria.toLowerCase() === categoriaId.toLowerCase())
+            : this.conceptos;
         
-        .ventas-turno-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 15px 20px; 
-            background: var(--gray-50); 
-            border-bottom: 1px solid var(--gray-200); 
-        }
-        .ventas-turno-stats { display: flex; gap: 20px; }
-        .ventas-stat { text-align: center; }
-        .ventas-stat .valor { font-size: 24px; font-weight: 700; color: var(--umo-dark); }
-        .ventas-stat .label { font-size: 11px; color: var(--gray-500); text-transform: uppercase; }
-        .ventas-stat.total .valor { color: var(--success); }
+        conceptosFiltrados.forEach(c => {
+            selConc.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+        });
+    },
+
+    setTipo(tipo) {
+        this.tipo = tipo;
+        this.actualizarUI();
+    },
+
+    actualizarUI() {
+        // Tabs
+        document.querySelectorAll('.mov-tipo-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
         
-        .ventas-turno-lista { 
-            max-height: 400px; 
-            overflow-y: auto; 
-            padding: 15px; 
+        if (this.tipo === 'Deposito') {
+            document.querySelector('.mov-tipo-btn.deposito').classList.add('active');
+        } else {
+            document.querySelector('.mov-tipo-btn.retiro').classList.add('active');
         }
+
+        // Botón guardar
+        const btnGuardar = document.getElementById('mov-btn-guardar');
+        btnGuardar.classList.remove('deposito', 'retiro');
+        btnGuardar.classList.add(this.tipo.toLowerCase());
         
-        .venta-card { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 15px; 
-            background: white; 
-            border: 1px solid var(--gray-200); 
-            border-radius: var(--radius); 
-            margin-bottom: 10px; 
-            cursor: pointer; 
-            transition: all 0.2s; 
+        if (this.tipo === 'Deposito') {
+            btnGuardar.innerHTML = '<i class="fas fa-arrow-down"></i> Registrar Ingreso';
+        } else {
+            btnGuardar.innerHTML = '<i class="fas fa-arrow-up"></i> Registrar Egreso';
         }
-        .venta-card:hover { border-color: var(--umo-beige); box-shadow: var(--shadow); transform: translateY(-2px); }
-        .venta-card.cancelada { opacity: 0.6; background: #fff5f5; border-color: #ffcdd2; }
-        .venta-card.cancelada:hover { transform: none; box-shadow: none; }
-        
-        .venta-card-left { display: flex; align-items: center; gap: 15px; }
-        .venta-icon { 
-            width: 45px; 
-            height: 45px; 
-            background: linear-gradient(135deg, var(--umo-beige), var(--umo-beige-dark)); 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            color: var(--umo-dark); 
-            font-size: 18px; 
-        }
-        .venta-card.cancelada .venta-icon { background: linear-gradient(135deg, #ffcdd2, #ef9a9a); color: var(--danger); }
-        
-        .venta-info h4 { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: var(--umo-dark); }
-        .venta-info p { margin: 0; font-size: 12px; color: var(--gray-500); }
-        .venta-info .cliente-tag { 
-            display: inline-block; 
-            padding: 2px 8px; 
-            background: var(--gray-100); 
-            border-radius: 10px; 
-            font-size: 10px; 
-            margin-top: 4px; 
-        }
-        
-        .venta-card-right { text-align: right; }
-        .venta-total { font-size: 18px; font-weight: 700; color: var(--success); }
-        .venta-card.cancelada .venta-total { color: var(--danger); text-decoration: line-through; }
-        .venta-estado { 
-            display: inline-block; 
-            padding: 3px 10px; 
-            border-radius: 12px; 
-            font-size: 10px; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            margin-top: 5px; 
-        }
-        .venta-estado.completada { background: #e8f5e9; color: var(--success); }
-        .venta-estado.cancelada { background: #ffebee; color: var(--danger); }
-        
-        .ventas-empty { 
-            text-align: center; 
-            padding: 60px 20px; 
-            color: var(--gray-400); 
-        }
-        .ventas-empty i { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
-        .ventas-empty p { font-size: 14px; }
+    },
 
-        /* ============================================ */
-        /* MODAL DETALLE VENTA */
-        /* ============================================ */
-        .modal-detalle-venta { max-width: 700px; }
-        .modal-detalle-venta .modal-body { padding: 0; }
-        
-        .detalle-venta-header { 
-            padding: 20px; 
-            background: linear-gradient(135deg, var(--umo-dark), var(--umo-dark-light)); 
-            color: white; 
-        }
-        .detalle-venta-header h4 { margin: 0 0 5px 0; font-size: 20px; }
-        .detalle-venta-header p { margin: 0; opacity: 0.8; font-size: 13px; }
-        .detalle-venta-meta { 
-            display: flex; 
-            gap: 20px; 
-            margin-top: 15px; 
-            padding-top: 15px; 
-            border-top: 1px solid rgba(255,255,255,0.2); 
-        }
-        .detalle-meta-item { flex: 1; }
-        .detalle-meta-item label { display: block; font-size: 10px; opacity: 0.7; text-transform: uppercase; }
-        .detalle-meta-item span { font-size: 14px; font-weight: 600; }
-        
-        .detalle-section { padding: 15px 20px; border-bottom: 1px solid var(--gray-200); }
-        .detalle-section:last-child { border-bottom: none; }
-        .detalle-section h5 { 
-            margin: 0 0 12px 0; 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: var(--umo-dark); 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-        }
-        .detalle-section h5 i { color: var(--umo-beige-dark); }
-        
-        .detalle-items-lista { max-height: 200px; overflow-y: auto; }
-        .detalle-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 10px 12px; 
-            background: var(--gray-50); 
-            border-radius: var(--radius); 
-            margin-bottom: 8px; 
-        }
-        .detalle-item.cancelado { background: #fff5f5; opacity: 0.7; }
-        .detalle-item-info { flex: 1; }
-        .detalle-item-info .nombre { font-weight: 500; font-size: 13px; }
-        .detalle-item-info .cantidad { font-size: 11px; color: var(--gray-500); }
-        .detalle-item-precio { text-align: right; }
-        .detalle-item-precio .precio { font-weight: 600; color: var(--umo-dark); }
-        .detalle-item-precio .descuento { font-size: 11px; color: var(--success); }
-        .detalle-item.cancelado .detalle-item-precio .precio { text-decoration: line-through; color: var(--danger); }
-        .detalle-item-actions { margin-left: 10px; }
-        .btn-cancelar-item { 
-            padding: 5px 10px; 
-            background: #ffebee; 
-            color: var(--danger); 
-            border: 1px solid #ffcdd2; 
-            border-radius: var(--radius); 
-            cursor: pointer; 
-            font-size: 10px; 
-            transition: all 0.2s; 
-        }
-        .btn-cancelar-item:hover { background: var(--danger); color: white; }
-        
-        .detalle-pagos-lista { }
-        .detalle-pago { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 8px 12px; 
-            background: var(--gray-50); 
-            border-radius: var(--radius); 
-            margin-bottom: 6px; 
-            font-size: 13px; 
-        }
-        .detalle-pago .metodo { display: flex; align-items: center; gap: 8px; }
-        .detalle-pago .metodo i { color: var(--umo-beige-dark); }
-        .detalle-pago .monto { font-weight: 600; color: var(--success); }
-        
-        .detalle-totales { 
-            background: var(--gray-50); 
-            padding: 15px; 
-            border-radius: var(--radius); 
-        }
-        .detalle-total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
-        .detalle-total-row.final { 
-            font-size: 18px; 
-            font-weight: 700; 
-            padding-top: 10px; 
-            border-top: 1px solid var(--gray-300); 
-            margin-top: 10px; 
-            color: var(--umo-dark); 
-        }
-        
-        .detalle-actions { 
-            display: flex; 
-            gap: 10px; 
-            padding: 15px 20px; 
-            background: var(--gray-50); 
-            border-top: 1px solid var(--gray-200); 
-        }
-        .detalle-actions .btn { flex: 1; padding: 12px; font-size: 13px; font-weight: 600; }
-        .btn-reimprimir { background: var(--umo-beige); color: var(--umo-dark); border: none; }
-        .btn-reimprimir:hover { background: var(--umo-beige-dark); }
-        .btn-cancelar-venta { background: white; color: var(--danger); border: 2px solid var(--danger); }
-        .btn-cancelar-venta:hover { background: var(--danger); color: white; }
-        .btn-volver { background: var(--gray-200); color: var(--gray-600); border: none; }
-        .btn-volver:hover { background: var(--gray-300); }
+    limpiarFormulario() {
+        document.getElementById('mov-monto').value = '';
+        document.getElementById('mov-origen').value = '';
+        document.getElementById('mov-destino').value = '';
+        document.getElementById('mov-categoria').value = '';
+        document.getElementById('mov-concepto').value = '';
+        document.getElementById('mov-notas').value = '';
+    },
 
-        /* ============================================ */
-        /* MODAL CONFIRMAR CANCELACIÓN */
-        /* ============================================ */
-        .modal-confirmar { max-width: 400px; }
-        .modal-confirmar .modal-body { padding: 25px; text-align: center; }
-        .confirmar-icon { 
-            width: 70px; 
-            height: 70px; 
-            background: #ffebee; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            margin: 0 auto 20px; 
-            color: var(--danger); 
-            font-size: 32px; 
-        }
-        .confirmar-titulo { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: var(--umo-dark); }
-        .confirmar-mensaje { font-size: 14px; color: var(--gray-500); margin-bottom: 20px; }
-        .confirmar-motivo { width: 100%; padding: 10px; border: 1px solid var(--gray-200); border-radius: var(--radius); margin-bottom: 20px; font-size: 13px; }
-        .confirmar-actions { display: flex; gap: 10px; }
-        .confirmar-actions .btn { flex: 1; padding: 12px; font-weight: 600; }
+    async guardar() {
+        const monto = parseFloat(document.getElementById('mov-monto').value) || 0;
+        const origen = document.getElementById('mov-origen').value;
+        const destino = document.getElementById('mov-destino').value;
+        const categoria = document.getElementById('mov-categoria').value;
+        const concepto = document.getElementById('mov-concepto').value;
+        const notas = document.getElementById('mov-notas').value;
 
-        /* ============================================ */
-        /* BOTÓN MIS VENTAS EN HEADER */
-        /* ============================================ */
-        .btn-mis-ventas { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            padding: 8px 16px; 
-            background: linear-gradient(135deg, var(--umo-beige), var(--umo-beige-dark)); 
-            color: var(--umo-dark); 
-            border: none; 
-            border-radius: var(--radius); 
-            cursor: pointer; 
-            font-size: 13px; 
-            font-weight: 600; 
-            transition: all 0.2s; 
+        // Validaciones
+        if (monto <= 0) {
+            mostrarToast('Ingresa un monto válido', 'error');
+            return;
         }
-        .btn-mis-ventas:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-        .btn-mis-ventas i { font-size: 16px; }
-        .btn-mis-ventas .badge { 
-            background: var(--umo-dark); 
-            color: white; 
-            padding: 2px 8px; 
-            border-radius: 10px; 
-            font-size: 11px; 
-            margin-left: 5px; 
+        if (!origen) {
+            mostrarToast('Selecciona el origen', 'error');
+            return;
+        }
+        if (!categoria) {
+            mostrarToast('Selecciona una categoría', 'error');
+            return;
+        }
+        if (!concepto) {
+            mostrarToast('Selecciona un concepto', 'error');
+            return;
         }
 
-        /* ============================================ */
-        /* RESPONSIVE */
-        /* ============================================ */
-        @media (max-width: 768px) { 
-            .modal-cobro-compact .modal-body { grid-template-columns: 1fr; }
-            .ventas-turno-header { flex-direction: column; gap: 15px; }
-            .detalle-venta-meta { flex-wrap: wrap; }
-            .detalle-actions { flex-direction: column; }
-        }
-    </style>
-</head>
-<body>
-    <!-- ============================================ -->
-    <!-- LOGIN -->
-    <!-- ============================================ -->
-    <div id="login-screen" class="screen login-screen">
-        <div class="login-card">
-            <div class="login-header">
-                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="logo-img">
-                <h1>UMO POS</h1>
-                <p>Sistema Punto de Venta</p>
-            </div>
-            <form id="login-form" class="login-form">
-                <div class="field">
-                    <label for="login-empleado">ID Empleado</label>
-                    <div class="input-icon">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="login-empleado" placeholder="Ingresa tu ID" required autocomplete="off">
-                    </div>
-                </div>
-                <div class="field">
-                    <label for="login-pin">PIN de Acceso</label>
-                    <div class="input-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pin" placeholder="••••" required autocomplete="off">
-                    </div>
-                </div>
-                <div id="login-error" class="error-msg"></div>
-                <button type="submit" id="login-btn" class="btn btn-primary btn-block">
-                    <span>Iniciar Sesión</span>
-                    <div class="spinner"></div>
-                </button>
-            </form>
-            <footer class="login-footer">© 2025 UMO POS</footer>
-        </div>
-    </div>
+        const btn = document.getElementById('mov-btn-guardar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
-    <!-- ============================================ -->
-    <!-- LOADING -->
-    <!-- ============================================ -->
-    <div id="loading-screen" class="screen loading-screen" style="display:none">
-        <div class="loading-content">
-            <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="loading-logo">
-            <h1>UMO POS</h1>
-            <div class="loader"></div>
-            <p>Cargando datos...</p>
-        </div>
-    </div>
+        try {
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            
+            const response = await fetch(`${API_BASE}/movimientos-caja`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tipo: this.tipo,
+                    monto,
+                    origen,
+                    destino,
+                    categoria,
+                    concepto,
+                    notas,
+                    sucursal: usuario.sucursal || '',
+                    usuario: usuario.id || ''
+                })
+            });
 
-    <!-- ============================================ -->
-    <!-- TURNO -->
-    <!-- ============================================ -->
-    <div id="turno-screen" class="screen turno-screen" style="display:none">
-        <div class="turno-card">
-            <div class="turno-header">
-                <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO" class="turno-logo">
-                <h1>Abrir Turno</h1>
-                <p>Ingresa los datos para iniciar tu turno</p>
-            </div>
-            <div class="turno-user-info">
-                <div class="turno-user-avatar"><i class="fas fa-user-circle"></i></div>
-                <div class="turno-user-details">
-                    <strong id="turno-usuario-nombre">Usuario</strong>
-                    <small id="turno-usuario-sucursal">Sucursal</small>
-                </div>
-            </div>
-            <form id="turno-form" class="turno-form">
-                <div class="turno-section">
-                    <h3><i class="fas fa-coins"></i> Efectivo Inicial</h3>
-                    <div class="turno-grid">
-                        <div class="field"><label>MXN</label><div class="input-money"><span>$</span><input type="number" id="turno-mxn" value="0" min="0" step="0.01"></div></div>
-                        <div class="field"><label>USD</label><div class="input-money"><span>$</span><input type="number" id="turno-usd" value="0" min="0" step="0.01"></div></div>
-                        <div class="field"><label>CAD</label><div class="input-money"><span>$</span><input type="number" id="turno-cad" value="0" min="0" step="0.01"></div></div>
-                        <div class="field"><label>EUR</label><div class="input-money"><span>€</span><input type="number" id="turno-eur" value="0" min="0" step="0.01"></div></div>
-                    </div>
-                </div>
-                <div class="turno-section">
-                    <h3><i class="fas fa-exchange-alt"></i> Tasas de Cambio</h3>
-                    <div class="turno-grid three-cols">
-                        <div class="field"><label>1 USD =</label><div class="input-money"><span>$</span><input type="number" id="turno-tasa-usd" value="17.50" min="0" step="0.01"></div></div>
-                        <div class="field"><label>1 CAD =</label><div class="input-money"><span>$</span><input type="number" id="turno-tasa-cad" value="13.00" min="0" step="0.01"></div></div>
-                        <div class="field"><label>1 EUR =</label><div class="input-money"><span>€</span><input type="number" id="turno-tasa-eur" value="19.00" min="0" step="0.01"></div></div>
-                    </div>
-                </div>
-                <div id="turno-error" class="error-msg"></div>
-                <div class="turno-actions">
-                    <button type="button" class="btn btn-outline" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Salir</button>
-                    <button type="submit" id="turno-btn" class="btn btn-success"><i class="fas fa-play"></i><span>Abrir Turno</span><div class="spinner"></div></button>
-                </div>
-            </form>
-        </div>
-    </div>
+            const data = await response.json();
 
-    <!-- ============================================ -->
-    <!-- APP PRINCIPAL -->
-    <!-- ============================================ -->
-    <div id="app" class="app" style="display:none">
-        <header class="header">
-            <div class="header-left">
-                <div class="logo">
-                    <img src="https://res.cloudinary.com/dstcnsu6a/image/upload/v1754346747/ChatGPT_Image_4_ago_2025_16_32_04_cpudux.png" alt="UMO">
-                    <span>UMO</span>
-                </div>
-                <div class="turno-badge">
-                    <span class="status-dot"></span>
-                    <span>Turno: <strong id="header-turno-id">-</strong></span>
-                </div>
-            </div>
-            <div class="header-center">
-                <div class="tasas-display">
-                    <div class="tasa-item"><span class="tasa-label">USD</span><span class="tasa-value">$<span id="header-tasa-usd">17.50</span></span></div>
-                    <div class="tasa-item"><span class="tasa-label">CAD</span><span class="tasa-value">$<span id="header-tasa-cad">13.00</span></span></div>
-                    <div class="tasa-item"><span class="tasa-label">EUR</span><span class="tasa-value">€<span id="header-tasa-eur">19.00</span></span></div>
-                </div>
-            </div>
-            <div class="header-right">
-                <!-- BOTÓN SINCRONIZAR -->
-                <button class="btn-sync" id="btn-sync" onclick="sincronizarDatos()" title="Sincronizar datos">
-                    <i class="fas fa-sync-alt"></i>
-                    <span id="sync-indicator">Sync</span>
-                </button>
-                <!-- BOTÓN MOVIMIENTOS CAJA -->
-                <button class="btn-movimientos" onclick="MovimientosCaja.abrir()" title="Ingresos/Egresos">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Caja</span>
-                </button>
-                <!-- BOTÓN MIS VENTAS -->
-                <button class="btn-mis-ventas" onclick="VentasTurno.abrir()" title="Ver ventas del turno">
-                    <i class="fas fa-receipt"></i>
-                    <span>Mis Ventas</span>
-                    <span class="badge" id="ventas-turno-count">0</span>
-                </button>
-                <div class="user-info">
-                    <div class="user-avatar" id="user-avatar">US</div>
-                    <div class="user-details">
-                        <span class="user-name" id="user-name">Usuario</span>
-                        <small class="user-sucursal" id="user-sucursal">Sucursal</small>
-                    </div>
-                </div>
-                <button class="btn-icon" onclick="abrirModalCerrarTurno()" title="Cerrar Turno"><i class="fas fa-cash-register"></i></button>
-                <button class="btn-icon btn-danger" onclick="cerrarSesion()" title="Cerrar Sesión"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
-        </header>
-
-        <main class="main-content">
-            <section class="products-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-boxes"></i> Productos</h2>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="search-producto" placeholder="Buscar o escanear código...">
-                        <i class="fas fa-barcode search-icon-right"></i>
-                    </div>
-                </div>
-                <div class="products-table-container">
-                    <table class="products-table">
-                        <thead>
-                            <tr><th>SKU</th><th>Producto</th><th>Precio</th><th>Categoría</th><th></th></tr>
-                        </thead>
-                        <tbody id="productos-tbody">
-                            <tr><td colspan="5" class="loading-cell"><div class="loader small"></div><span>Cargando productos...</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="cart-panel">
-                <div class="panel-header"><h2><i class="fas fa-shopping-cart"></i> Venta Actual</h2></div>
-                <div class="customer-section">
-                    <div class="customer-header"><i class="fas fa-user"></i><span>Cliente</span></div>
-                    <div class="customer-selector" id="cliente-nombre" onclick="abrirModalClientes()">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Seleccionar Cliente</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                </div>
-                <div class="cart-items" id="cart-items">
-                    <div class="cart-empty">
-                        <div class="empty-icon">🛒</div>
-                        <p>Carrito vacío</p>
-                        <small>Agrega productos para comenzar</small>
-                    </div>
-                </div>
-                <div class="cart-summary" id="cart-summary" style="display:none">
-                    <div class="summary-row"><span>Subtotal:</span><span id="cart-subtotal">$0</span></div>
-                    <div class="summary-row discount"><span>Descuento:</span><span id="cart-descuento">-$0</span></div>
-                    <div class="summary-row total"><span>TOTAL:</span><span id="cart-total">$0</span></div>
-                </div>
-                <div class="cart-actions">
-                    <button class="btn btn-secondary" onclick="limpiarCarrito()"><i class="fas fa-trash"></i> Limpiar</button>
-                    <button class="btn btn-primary btn-cobrar" onclick="abrirModalCobro()" id="btn-cobrar" disabled><i class="fas fa-cash-register"></i> Cobrar</button>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL CLIENTES -->
-    <!-- ============================================ -->
-    <div id="modal-clientes" class="modal-overlay">
-        <div class="modal modal-md">
-            <div class="modal-header">
-                <h3><i class="fas fa-users"></i> Cliente</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-clientes')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="cliente-tabs">
-                    <button class="cliente-tab active" onclick="cambiarTabCliente('buscar')"><i class="fas fa-search"></i> Buscar</button>
-                    <button class="cliente-tab" onclick="cambiarTabCliente('agregar')"><i class="fas fa-user-plus"></i> Agregar</button>
-                </div>
-                <div id="tab-buscar-cliente" class="cliente-tab-content active">
-                    <div class="search-box mb-15"><i class="fas fa-search"></i><input type="text" id="search-cliente" placeholder="Buscar..."></div>
-                    <div class="clientes-lista" id="clientes-lista"></div>
-                </div>
-                <div id="tab-agregar-cliente" class="cliente-tab-content">
-                    <div class="nuevo-cliente-form">
-                        <div class="form-row">
-                            <div class="field"><label>Código *</label><input type="text" id="nuevo-cliente-codigo"></div>
-                            <div class="field"><label>Nombre *</label><input type="text" id="nuevo-cliente-nombre"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="field"><label>Correo</label><input type="email" id="nuevo-cliente-correo"></div>
-                            <div class="field"><label>Teléfono</label><input type="tel" id="nuevo-cliente-telefono"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="field">
-                                <label>Grupo</label>
-                                <select id="nuevo-cliente-grupo">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Cliente Local">Cliente Local</option>
-                                    <option value="Cliente Foráneo">Cliente Foráneo</option>
-                                    <option value="Mayorista">Mayorista</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button class="btn btn-success btn-block" onclick="guardarNuevoCliente()"><i class="fas fa-save"></i> Guardar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL COBRO -->
-    <!-- ============================================ -->
-    <div id="modal-cobro" class="modal-overlay">
-        <div class="modal modal-cobro-compact">
-            <div class="modal-header gradient">
-                <h3><i class="fas fa-cash-register"></i> Procesar Cobro</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-cobro')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="cobro-left">
-                    <!-- Cliente -->
-                    <div class="cobro-section">
-                        <h4><i class="fas fa-user"></i> Cliente</h4>
-                        <div class="cobro-cliente-info">
-                            <div>
-                                <div class="nombre" id="cobro-cliente-nombre">Cliente General</div>
-                                <div class="grupo" id="cobro-cliente-grupo">Sin grupo</div>
-                            </div>
-                            <button class="btn btn-outline" style="padding:6px 12px;font-size:11px;" onclick="abrirModalClientes()">CAMBIAR</button>
-                        </div>
-                    </div>
-                    <!-- Descuentos -->
-                    <div class="cobro-section">
-                        <h4><i class="fas fa-percent"></i> Descuentos</h4>
-                        <div class="cobro-descuento-activo" id="cobro-descuento-activo" style="display:none;">
-                            <span><i class="fas fa-check-circle check"></i> <span id="cobro-descuento-nombre"></span></span>
-                            <span class="porcentaje" id="cobro-descuento-porcentaje">0%</span>
-                        </div>
-                        <div class="cobro-extra-input">
-                            <label>Extra (MXN):</label>
-                            <input type="number" id="cobro-descuento-extra" value="0" min="0" step="0.01">
-                        </div>
-                    </div>
-                    <!-- Métodos de Pago -->
-                    <div class="cobro-section">
-                        <h4><i class="fas fa-credit-card"></i> Métodos de Pago</h4>
-                        <div class="cobro-metodos-grid">
-                            <button class="cobro-metodo-btn active" data-metodo="efectivo" onclick="seleccionarMetodoPago('efectivo')"><i class="fas fa-money-bill-wave"></i><br>Efectivo</button>
-                            <button class="cobro-metodo-btn" data-metodo="transferencia" onclick="seleccionarMetodoPago('transferencia')"><i class="fas fa-exchange-alt"></i><br>Transferencia</button>
-                            <button class="cobro-metodo-btn" data-metodo="bbva_nacional" onclick="seleccionarMetodoPago('bbva_nacional')"><i class="fas fa-university"></i><br>BBVA Nal.</button>
-                            <button class="cobro-metodo-btn" data-metodo="bbva_internacional" onclick="seleccionarMetodoPago('bbva_internacional')"><i class="fas fa-globe"></i><br>BBVA Int.</button>
-                            <button class="cobro-metodo-btn" data-metodo="clip_nacional" onclick="seleccionarMetodoPago('clip_nacional')"><i class="fas fa-credit-card"></i><br>Clip Nal.</button>
-                            <button class="cobro-metodo-btn" data-metodo="clip_internacional" onclick="seleccionarMetodoPago('clip_internacional')"><i class="fas fa-credit-card"></i><br>Clip Int.</button>
-                        </div>
-                        <div class="cobro-monedas-grid">
-                            <button class="cobro-moneda-btn active" data-moneda="MXN" onclick="seleccionarMoneda('MXN')">MXN</button>
-                            <button class="cobro-moneda-btn" data-moneda="USD" onclick="seleccionarMoneda('USD')">USD</button>
-                            <button class="cobro-moneda-btn" data-moneda="CAD" onclick="seleccionarMoneda('CAD')">CAD</button>
-                            <button class="cobro-moneda-btn" data-moneda="EUR" onclick="seleccionarMoneda('EUR')">EUR</button>
-                        </div>
-                        <input type="number" class="cobro-monto-input" id="cobro-monto" placeholder="Monto recibido" min="0" step="0.01">
-                        <button class="cobro-btn-agregar" onclick="agregarPago()"><i class="fas fa-plus"></i> Agregar Pago</button>
-                    </div>
-                    <!-- Lista de Pagos -->
-                    <div class="cobro-section">
-                        <h4><i class="fas fa-list"></i> Pagos <span id="cobro-pagos-count" style="background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:5px;">0</span></h4>
-                        <div class="cobro-pagos-lista" id="cobro-pagos-lista">
-                            <div style="text-align:center;color:var(--gray-400);padding:20px;font-size:12px;border:1px dashed var(--gray-200);border-radius:var(--radius);">No hay pagos registrados</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cobro-right">
-                    <!-- Totales -->
-                    <div class="cobro-totales">
-                        <div class="cobro-total-row"><span>Subtotal:</span><span id="cobro-subtotal">$0.00</span></div>
-                        <div class="cobro-total-row descuento"><span>Descuento:</span><span id="cobro-descuento">-$0.00</span></div>
-                        <div class="cobro-total-row final"><span>TOTAL:</span><span id="cobro-total">$0.00</span></div>
-                    </div>
-                    <!-- Pendiente -->
-                    <div class="cobro-pendiente">
-                        <div class="cobro-pendiente-row recibido"><span>Recibido:</span><span id="cobro-recibido">$0.00 MXN</span></div>
-                        <div class="cobro-pendiente-row pendiente"><span>Pendiente:</span><span id="cobro-pendiente">$0.00 MXN</span></div>
-                    </div>
-                    <!-- Cambio -->
-                    <div id="cobro-cambio-section" style="display:none;background:linear-gradient(135deg,var(--success),var(--success-dark));color:white;padding:15px;border-radius:var(--radius);text-align:center;">
-                        <div style="font-size:14px;">CAMBIO</div>
-                        <div id="cobro-cambio" style="font-size:28px;font-weight:700;">$0.00</div>
-                    </div>
-                    <!-- Observaciones -->
-                    <div class="cobro-section cobro-observaciones">
-                        <h4><i class="fas fa-sticky-note"></i> Observaciones</h4>
-                        <textarea id="cobro-notas" placeholder="Notas (opcional)"></textarea>
-                    </div>
-                    <!-- Acciones -->
-                    <div class="cobro-actions">
-                        <button class="cobro-btn-cancelar" onclick="cerrarModal('modal-cobro')"><i class="fas fa-times"></i> CANCELAR</button>
-                        <button class="cobro-btn-confirmar" id="btn-confirmar-venta" onclick="confirmarVenta()" disabled><i class="fas fa-check"></i> CONFIRMAR</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL CERRAR TURNO -->
-    <!-- ============================================ -->
-    <div id="modal-cerrar-turno" class="modal-overlay">
-        <div class="modal modal-lg">
-            <div class="modal-header danger">
-                <h3><i class="fas fa-lock"></i> Cerrar Turno</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-cerrar-turno')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body" id="modal-cerrar-turno-body"></div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL EXITO -->
-    <!-- ============================================ -->
-    <div id="modal-exito" class="modal-overlay">
-        <div class="modal modal-sm success-modal">
-            <div class="success-content">
-                <div class="success-icon"><i class="fas fa-check-circle"></i></div>
-                <h2>¡Venta Exitosa!</h2>
-                <div class="success-details">
-                    <div class="detail-row"><span>Ticket:</span><strong id="exito-ticket">#0001</strong></div>
-                    <div class="detail-row"><span>Total:</span><strong id="exito-total">$0.00</strong></div>
-                    <div class="detail-row cambio"><span>Cambio:</span><strong id="exito-cambio">$0.00</strong></div>
-                </div>
-                <div class="success-actions">
-                    <button class="btn btn-secondary" onclick="imprimirTicket()"><i class="fas fa-print"></i> Imprimir</button>
-                    <button class="btn btn-primary" onclick="cerrarModalExito()"><i class="fas fa-plus"></i> Nueva Venta</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL VENTAS DEL TURNO -->
-    <!-- ============================================ -->
-    <div id="modal-ventas-turno" class="modal-overlay">
-        <div class="modal modal-ventas-turno">
-            <div class="modal-header">
-                <h3><i class="fas fa-receipt"></i> Ventas del Turno</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-ventas-turno')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <!-- Header con estadísticas -->
-                <div class="ventas-turno-header">
-                    <div class="ventas-turno-stats">
-                        <div class="ventas-stat">
-                            <div class="valor" id="ventas-stat-cantidad">0</div>
-                            <div class="label">Ventas</div>
-                        </div>
-                        <div class="ventas-stat total">
-                            <div class="valor" id="ventas-stat-total">$0.00</div>
-                            <div class="label">Total</div>
-                        </div>
-                        <div class="ventas-stat">
-                            <div class="valor" id="ventas-stat-canceladas">0</div>
-                            <div class="label">Canceladas</div>
-                        </div>
-                    </div>
-                    <button class="btn btn-outline" onclick="VentasTurno.cargar()">
-                        <i class="fas fa-sync-alt"></i> Actualizar
-                    </button>
-                </div>
-                <!-- Lista de ventas -->
-                <div class="ventas-turno-lista" id="ventas-turno-lista">
-                    <div class="ventas-empty">
-                        <i class="fas fa-receipt"></i>
-                        <p>No hay ventas en este turno</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL DETALLE VENTA -->
-    <!-- ============================================ -->
-    <div id="modal-detalle-venta" class="modal-overlay">
-        <div class="modal modal-detalle-venta">
-            <div class="modal-header">
-                <h3><i class="fas fa-file-invoice"></i> Detalle de Venta</h3>
-                <button class="btn-close" onclick="VentasTurno.cerrarDetalle()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <!-- Header con info de venta -->
-                <div class="detalle-venta-header">
-                    <h4 id="detalle-venta-id">Venta #V123456</h4>
-                    <p id="detalle-venta-fecha">31/12/2025 - 10:30 AM</p>
-                    <div class="detalle-venta-meta">
-                        <div class="detalle-meta-item">
-                            <label>Cliente</label>
-                            <span id="detalle-venta-cliente">Público General</span>
-                        </div>
-                        <div class="detalle-meta-item">
-                            <label>Vendedor</label>
-                            <span id="detalle-venta-vendedor">-</span>
-                        </div>
-                        <div class="detalle-meta-item">
-                            <label>Sucursal</label>
-                            <span id="detalle-venta-sucursal">-</span>
-                        </div>
-                        <div class="detalle-meta-item">
-                            <label>Estado</label>
-                            <span id="detalle-venta-estado" class="venta-estado completada">Completada</span>
-                        </div>
-                    </div>
-                </div>
-                <!-- Productos -->
-                <div class="detalle-section">
-                    <h5><i class="fas fa-box"></i> Productos</h5>
-                    <div class="detalle-items-lista" id="detalle-items-lista"></div>
-                </div>
-                <!-- Pagos -->
-                <div class="detalle-section">
-                    <h5><i class="fas fa-credit-card"></i> Pagos</h5>
-                    <div class="detalle-pagos-lista" id="detalle-pagos-lista"></div>
-                </div>
-                <!-- Totales -->
-                <div class="detalle-section">
-                    <div class="detalle-totales">
-                        <div class="detalle-total-row"><span>Subtotal:</span><span id="detalle-subtotal">$0.00</span></div>
-                        <div class="detalle-total-row"><span>Descuento:</span><span id="detalle-descuento">-$0.00</span></div>
-                        <div class="detalle-total-row final"><span>Total:</span><span id="detalle-total">$0.00</span></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Acciones -->
-            <div class="detalle-actions">
-                <button class="btn btn-volver" onclick="VentasTurno.cerrarDetalle()">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </button>
-                <button class="btn btn-reimprimir" onclick="VentasTurno.reimprimir()">
-                    <i class="fas fa-print"></i> Reimprimir
-                </button>
-                <button class="btn btn-cancelar-venta" id="btn-cancelar-venta-detalle" onclick="VentasTurno.confirmarCancelar()">
-                    <i class="fas fa-ban"></i> Cancelar Venta
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL CONFIRMAR CANCELACIÓN -->
-    <!-- ============================================ -->
-    <div id="modal-confirmar-cancelacion" class="modal-overlay">
-        <div class="modal modal-confirmar">
-            <div class="modal-body">
-                <div class="confirmar-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                <div class="confirmar-titulo" id="confirmar-titulo">¿Cancelar venta?</div>
-                <div class="confirmar-mensaje" id="confirmar-mensaje">Esta acción no se puede deshacer.</div>
-                <input type="text" class="confirmar-motivo" id="confirmar-motivo" placeholder="Motivo de cancelación (requerido)">
-                <div class="confirmar-actions">
-                    <button class="btn btn-outline" onclick="cerrarModal('modal-confirmar-cancelacion')">No, volver</button>
-                    <button class="btn btn-danger" id="btn-confirmar-cancelacion" onclick="VentasTurno.ejecutarCancelacion()">
-                        <i class="fas fa-ban"></i> Sí, cancelar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- MODAL MOVIMIENTOS DE CAJA -->
-    <!-- ============================================ -->
-    <div id="modal-movimientos-caja" class="modal-overlay">
-        <div class="modal modal-movimientos">
-            <div class="modal-header">
-                <h3><i class="fas fa-exchange-alt"></i> Movimiento de Caja</h3>
-                <button class="btn-close" onclick="cerrarModal('modal-movimientos-caja')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <!-- Tipo de movimiento -->
-                <div class="mov-tipo-tabs">
-                    <button type="button" class="mov-tipo-btn deposito active" onclick="MovimientosCaja.setTipo('Deposito')">
-                        <i class="fas fa-arrow-down"></i>
-                        <span>Ingreso</span>
-                    </button>
-                    <button type="button" class="mov-tipo-btn retiro" onclick="MovimientosCaja.setTipo('Retiro')">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>Egreso</span>
-                    </button>
-                </div>
-
-                <!-- Monto -->
-                <div class="mov-form-group">
-                    <label>Monto *</label>
-                    <input type="number" id="mov-monto" class="mov-monto-input" placeholder="0.00" min="0" step="0.01">
-                </div>
-
-                <!-- Origen y Destino -->
-                <div class="mov-form-row">
-                    <div class="mov-form-group">
-                        <label>Origen *</label>
-                        <select id="mov-origen">
-                            <option value="">Seleccionar...</option>
-                        </select>
-                    </div>
-                    <div class="mov-form-group">
-                        <label>Destino</label>
-                        <select id="mov-destino">
-                            <option value="">Seleccionar...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Categoría y Concepto -->
-                <div class="mov-form-row">
-                    <div class="mov-form-group">
-                        <label>Categoría *</label>
-                        <select id="mov-categoria" onchange="MovimientosCaja.filtrarConceptos()">
-                            <option value="">Seleccionar...</option>
-                        </select>
-                    </div>
-                    <div class="mov-form-group">
-                        <label>Concepto *</label>
-                        <select id="mov-concepto">
-                            <option value="">Seleccionar...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Notas -->
-                <div class="mov-form-group">
-                    <label>Notas</label>
-                    <textarea id="mov-notas" placeholder="Observaciones adicionales..."></textarea>
-                </div>
-
-                <!-- Acciones -->
-                <div class="mov-actions">
-                    <button type="button" class="mov-btn-cancelar" onclick="cerrarModal('modal-movimientos-caja')">Cancelar</button>
-                    <button type="button" class="mov-btn-guardar deposito" id="mov-btn-guardar" onclick="MovimientosCaja.guardar()">
-                        <i class="fas fa-save"></i> Registrar Ingreso
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- TOAST -->
-    <!-- ============================================ -->
-    <div id="toast" class="toast"></div>
-
-    <!-- ============================================ -->
-    <!-- SCRIPTS -->
-    <!-- ============================================ -->
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/turno.js"></script>
-    <script src="js/productos.js"></script>
-    <script src="js/carrito.js"></script>
-    <script src="js/cobro.js"></script>
-    <script src="js/ventas-turno.js"></script>
-    <script src="js/movimientos-caja.js"></script>
-    <script src="js/sync.js"></script>
-    <script src="js/app.js"></script>
-    <script>
-        function cambiarTabCliente(tab) {
-            document.querySelectorAll('.cliente-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.cliente-tab-content').forEach(c => c.classList.remove('active'));
-            if (tab === 'buscar') {
-                document.querySelector('.cliente-tab:first-child').classList.add('active');
-                document.getElementById('tab-buscar-cliente').classList.add('active');
+            if (data.success) {
+                mostrarToast(`${this.tipo === 'Deposito' ? 'Ingreso' : 'Egreso'} registrado correctamente`, 'success');
+                cerrarModal('modal-movimientos-caja');
             } else {
-                document.querySelector('.cliente-tab:last-child').classList.add('active');
-                document.getElementById('tab-agregar-cliente').classList.add('active');
+                throw new Error(data.error || 'Error al guardar');
             }
+        } catch (error) {
+            console.error('Error guardando movimiento:', error);
+            mostrarToast(error.message || 'Error al guardar', 'error');
+        } finally {
+            this.actualizarUI();
+            btn.disabled = false;
         }
-    </script>
-</body>
-</html>
+    }
+};
