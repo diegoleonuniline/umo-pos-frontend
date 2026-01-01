@@ -99,6 +99,104 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* ============================================ */
+        /* BOTÓN MOVIMIENTOS CAJA */
+        /* ============================================ */
+        .btn-movimientos {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-movimientos:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn-movimientos i { font-size: 14px; }
+
+        /* ============================================ */
+        /* MODAL MOVIMIENTOS CAJA */
+        /* ============================================ */
+        .modal-movimientos { max-width: 500px; }
+        .mov-tipo-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .mov-tipo-btn { 
+            flex: 1; 
+            padding: 15px; 
+            border: 2px solid var(--gray-200); 
+            background: white; 
+            border-radius: var(--radius); 
+            cursor: pointer; 
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .mov-tipo-btn:hover { border-color: var(--gray-300); }
+        .mov-tipo-btn.active.deposito { border-color: var(--success); background: rgba(76, 175, 80, 0.1); }
+        .mov-tipo-btn.active.retiro { border-color: var(--danger); background: rgba(244, 67, 54, 0.1); }
+        .mov-tipo-btn i { font-size: 24px; display: block; margin-bottom: 8px; }
+        .mov-tipo-btn.deposito i { color: var(--success); }
+        .mov-tipo-btn.retiro i { color: var(--danger); }
+        .mov-tipo-btn span { font-weight: 600; font-size: 14px; }
+        
+        .mov-form-group { margin-bottom: 15px; }
+        .mov-form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+        .mov-form-group select, .mov-form-group input, .mov-form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .mov-form-group select:focus, .mov-form-group input:focus, .mov-form-group textarea:focus {
+            outline: none;
+            border-color: var(--umo-beige-dark);
+        }
+        .mov-form-group textarea { min-height: 60px; resize: none; }
+        .mov-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        .mov-monto-input { 
+            font-size: 24px; 
+            font-weight: 700; 
+            text-align: center; 
+            padding: 15px;
+            background: var(--gray-50);
+        }
+        .mov-monto-input:focus { background: white; }
+        
+        .mov-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .mov-btn-cancelar { 
+            flex: 1; 
+            padding: 12px; 
+            background: var(--gray-100); 
+            color: var(--gray-700); 
+            border: none; 
+            border-radius: var(--radius); 
+            cursor: pointer; 
+            font-weight: 600;
+        }
+        .mov-btn-guardar { 
+            flex: 2; 
+            padding: 12px; 
+            background: var(--success); 
+            color: white; 
+            border: none; 
+            border-radius: var(--radius); 
+            cursor: pointer; 
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .mov-btn-guardar:disabled { background: var(--gray-400); cursor: not-allowed; }
+        .mov-btn-guardar.retiro { background: var(--danger); }
+        .mov-btn-guardar.deposito { background: var(--success); }
+
+        /* ============================================ */
         /* MODAL VENTAS TURNO */
         /* ============================================ */
         .modal-ventas-turno { max-width: 950px; }
@@ -482,6 +580,11 @@
                     <i class="fas fa-sync-alt"></i>
                     <span id="sync-indicator">Sync</span>
                 </button>
+                <!-- BOTÓN MOVIMIENTOS CAJA -->
+                <button class="btn-movimientos" onclick="MovimientosCaja.abrir()" title="Ingresos/Egresos">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Caja</span>
+                </button>
                 <!-- BOTÓN MIS VENTAS -->
                 <button class="btn-mis-ventas" onclick="VentasTurno.abrir()" title="Ver ventas del turno">
                     <i class="fas fa-receipt"></i>
@@ -855,6 +958,83 @@
     </div>
 
     <!-- ============================================ -->
+    <!-- MODAL MOVIMIENTOS DE CAJA -->
+    <!-- ============================================ -->
+    <div id="modal-movimientos-caja" class="modal-overlay">
+        <div class="modal modal-movimientos">
+            <div class="modal-header">
+                <h3><i class="fas fa-exchange-alt"></i> Movimiento de Caja</h3>
+                <button class="btn-close" onclick="cerrarModal('modal-movimientos-caja')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <!-- Tipo de movimiento -->
+                <div class="mov-tipo-tabs">
+                    <button type="button" class="mov-tipo-btn deposito active" onclick="MovimientosCaja.setTipo('Deposito')">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>Ingreso</span>
+                    </button>
+                    <button type="button" class="mov-tipo-btn retiro" onclick="MovimientosCaja.setTipo('Retiro')">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>Egreso</span>
+                    </button>
+                </div>
+
+                <!-- Monto -->
+                <div class="mov-form-group">
+                    <label>Monto *</label>
+                    <input type="number" id="mov-monto" class="mov-monto-input" placeholder="0.00" min="0" step="0.01">
+                </div>
+
+                <!-- Origen y Destino -->
+                <div class="mov-form-row">
+                    <div class="mov-form-group">
+                        <label>Origen *</label>
+                        <select id="mov-origen">
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                    <div class="mov-form-group">
+                        <label>Destino</label>
+                        <select id="mov-destino">
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Categoría y Concepto -->
+                <div class="mov-form-row">
+                    <div class="mov-form-group">
+                        <label>Categoría *</label>
+                        <select id="mov-categoria" onchange="MovimientosCaja.filtrarConceptos()">
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                    <div class="mov-form-group">
+                        <label>Concepto *</label>
+                        <select id="mov-concepto">
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="mov-form-group">
+                    <label>Notas</label>
+                    <textarea id="mov-notas" placeholder="Observaciones adicionales..."></textarea>
+                </div>
+
+                <!-- Acciones -->
+                <div class="mov-actions">
+                    <button type="button" class="mov-btn-cancelar" onclick="cerrarModal('modal-movimientos-caja')">Cancelar</button>
+                    <button type="button" class="mov-btn-guardar deposito" id="mov-btn-guardar" onclick="MovimientosCaja.guardar()">
+                        <i class="fas fa-save"></i> Registrar Ingreso
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
     <!-- TOAST -->
     <!-- ============================================ -->
     <div id="toast" class="toast"></div>
@@ -870,6 +1050,7 @@
     <script src="js/carrito.js"></script>
     <script src="js/cobro.js"></script>
     <script src="js/ventas-turno.js"></script>
+    <script src="js/movimientos-caja.js"></script>
     <script src="js/sync.js"></script>
     <script src="js/app.js"></script>
     <script>
