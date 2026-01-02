@@ -68,13 +68,90 @@ const Corte = {
             }
 
             this.datos = data;
-            this.renderModal();
+            
+            // Si el turno ya está cerrado, mostrar modal de solo lectura con opción de recalcular
+            if (data.turno.estado === 'Cerrado') {
+                this.renderModalCerrado();
+            } else {
+                this.renderModal();
+            }
 
         } catch (error) {
             console.error('❌ Error cargando corte:', error);
             mostrarToast('Error: ' + error.message, 'error');
             this.cerrar();
         }
+    },
+
+    // Modal para turno YA CERRADO - abre modal de autorización encima
+    renderModalCerrado() {
+        const d = this.datos;
+        const modal = document.getElementById('modal-corte');
+        if (!modal) return;
+        
+        modal.innerHTML = `
+            <div class="modal modal-xl">
+                <div class="modal-header" style="background: linear-gradient(135deg, #f44336, #c62828);">
+                    <h3><i class="fas fa-lock"></i> Turno Cerrado</h3>
+                    <button class="btn-close" onclick="Corte.cerrar()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                    
+                    <div style="background:#fff3cd;border:1px solid #ffc107;padding:15px;border-radius:8px;margin-bottom:20px;text-align:center;">
+                        <i class="fas fa-exclamation-triangle" style="color:#ff9800;font-size:24px;"></i>
+                        <p style="margin:10px 0 0;font-weight:600;color:#856404;">Este turno ya fue cerrado. Para reabrirlo necesitas autorización de Admin/Gerente.</p>
+                    </div>
+
+                    <!-- INFO TURNO -->
+                    <div class="corte-info-turno">
+                        <span><strong>Turno:</strong> ${d.turno.id}</span>
+                        <span><strong>Usuario:</strong> ${d.turno.usuario}</span>
+                        <span><strong>Sucursal:</strong> ${d.turno.sucursal}</span>
+                        <span><strong>Estado:</strong> <span style="color:#f44336;font-weight:bold;">CERRADO</span></span>
+                    </div>
+
+                    <div class="corte-grid">
+                        <div class="corte-resumen">
+                            <div class="corte-card">
+                                <h4><i class="fas fa-shopping-cart"></i> Resumen de Ventas</h4>
+                                <div class="corte-row"><span>Ventas Netas</span><span class="valor">$${d.ventas.netas.toFixed(2)}</span></div>
+                                <div class="corte-row"><span>Número de ventas</span><span class="valor">${d.ventas.numVentas}</span></div>
+                                <div class="corte-row"><span>Cancelaciones</span><span class="valor text-danger">${d.ventas.numCanceladas}</span></div>
+                            </div>
+                            
+                            <div class="corte-card esperado">
+                                <h4><i class="fas fa-calculator"></i> Efectivo Esperado</h4>
+                                <div class="corte-row total big"><span>MXN</span><span>$${d.esperado.efectivoMXN.toFixed(2)}</span></div>
+                                <div class="corte-row"><span>USD</span><span>$${d.esperado.usd.toFixed(2)}</span></div>
+                                <div class="corte-row"><span>CAD</span><span>$${d.esperado.cad.toFixed(2)}</span></div>
+                                <div class="corte-row"><span>EUR</span><span>€${d.esperado.eur.toFixed(2)}</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="corte-conteo">
+                            <div class="corte-card" style="background:#ffebee;border-color:#f44336;">
+                                <h4 style="color:#c62828;"><i class="fas fa-info-circle"></i> Turno Cerrado</h4>
+                                <p style="font-size:13px;color:#666;margin-bottom:15px;">Para reabrir este turno y hacer un nuevo corte, necesitas autorización de un administrador.</p>
+                                <p style="font-size:12px;color:#999;">Haz clic en "Reabrir Turno" para solicitar autorización.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="Corte.cerrar()">Cancelar</button>
+                    <button class="btn btn-warning" onclick="Corte.solicitarRecalcular()" style="background:#ff9800;color:white;">
+                        <i class="fas fa-unlock"></i> Reabrir Turno
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+    
+    // Abrir modal de autorización ENCIMA del modal de corte
+    solicitarRecalcular() {
+        document.getElementById('recalcular-usuario').value = '';
+        document.getElementById('recalcular-pin').value = '';
+        document.getElementById('modal-recalcular').classList.add('active');
     },
 
     // Mostrar loading
@@ -274,11 +351,8 @@ const Corte = {
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" onclick="Corte.cerrar()">Cancelar</button>
-                    <button class="btn btn-warning" onclick="Corte.solicitarRecalcular()" style="background:#ff9800;color:white;">
-                        <i class="fas fa-redo"></i> Recalcular
-                    </button>
                     <button class="btn btn-success" onclick="Corte.guardar()">
-                        <i class="fas fa-save"></i> Cerrar Turno
+                        <i class="fas fa-lock"></i> Cerrar Turno
                     </button>
                 </div>
             </div>
@@ -375,8 +449,26 @@ const Corte = {
             const data = await response.json();
             if (!data.success) throw new Error(data.error);
 
-            // Mostrar resumen
-            alert(`✅ TURNO CERRADO\n\nTotal contado: $${data.resumen.totalContado.toFixed(2)}\nEsperado: $${data.resumen.esperado.toFixed(2)}\nDiferencia: $${data.resumen.diferencia.toFixed(2)}`);
+            // Mostrar resumen con diferencia
+            const dif = data.resumen.diferencia;
+            let estadoDif = '✅ CUADRA PERFECTO';
+            if (dif > 0) estadoDif = '⚠️ SOBRANTE';
+            if (dif < 0) estadoDif = '❌ FALTANTE';
+            
+            alert(`
+🔒 TURNO CERRADO EXITOSAMENTE
+
+📊 RESUMEN DEL CORTE:
+━━━━━━━━━━━━━━━━━━━━━
+💰 Total Contado: $${data.resumen.totalContado.toFixed(2)}
+📋 Esperado: $${data.resumen.esperado.toFixed(2)}
+━━━━━━━━━━━━━━━━━━━━━
+${estadoDif}
+Diferencia: $${dif.toFixed(2)}
+${data.resumen.difUSD !== 0 ? `\nUSD: ${data.resumen.difUSD >= 0 ? '+' : ''}$${data.resumen.difUSD.toFixed(2)}` : ''}
+${data.resumen.difCAD !== 0 ? `CAD: ${data.resumen.difCAD >= 0 ? '+' : ''}$${data.resumen.difCAD.toFixed(2)}` : ''}
+${data.resumen.difEUR !== 0 ? `EUR: ${data.resumen.difEUR >= 0 ? '+' : ''}€${data.resumen.difEUR.toFixed(2)}` : ''}
+            `.trim());
             
             mostrarToast('Turno cerrado exitosamente', 'success');
             this.cerrar();
@@ -401,14 +493,7 @@ const Corte = {
         }
     },
 
-    // Solicitar recalcular
-    solicitarRecalcular() {
-        document.getElementById('recalcular-usuario').value = '';
-        document.getElementById('recalcular-pin').value = '';
-        document.getElementById('modal-recalcular').classList.add('active');
-    },
-
-    // Ejecutar recalcular
+    // Ejecutar recalcular (reabrir turno cerrado)
     async ejecutarRecalcular() {
         const usuarioId = document.getElementById('recalcular-usuario')?.value?.trim();
         const pin = document.getElementById('recalcular-pin')?.value?.trim();
@@ -434,11 +519,13 @@ const Corte = {
                 return;
             }
 
+            // Cerrar modal de autorización
             cerrarModal('modal-recalcular');
+            
             mostrarToast(`Turno reabierto por ${data.autorizadoPor}`, 'success');
             
-            // Recargar el corte
-            this.abrir();
+            // Recargar el corte (ahora mostrará el modal normal porque está abierto)
+            setTimeout(() => this.abrir(), 500);
 
         } catch (error) {
             console.error('❌ Error recalcular:', error);
@@ -449,6 +536,7 @@ const Corte = {
     // Cerrar modal
     cerrar() {
         document.getElementById('modal-corte')?.remove();
+        cerrarModal('modal-recalcular'); // También cerrar si está abierto
     }
 };
 
