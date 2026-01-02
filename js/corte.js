@@ -1,42 +1,111 @@
 // ============================================
-// CORTE DE TURNO - corte.js
+// CORTE DE TURNO - corte.js (CORREGIDO)
+// Sin SweetAlert, usa modales nativos
 // ============================================
 
 const Corte = {
     datos: null,
     turnoId: null,
 
+    // Obtener turno ID correctamente
+    getTurnoId() {
+        // 1. Desde Turno.actual
+        if (typeof Turno !== 'undefined' && Turno.actual && Turno.actual.ID) {
+            return Turno.actual.ID;
+        }
+        
+        // 2. Buscar en localStorage con key correcta
+        if (typeof Auth !== 'undefined') {
+            const odooId = Auth.getOdooId ? Auth.getOdooId() : (Auth.getId ? Auth.getId() : null);
+            if (odooId) {
+                const key = 'umo_turno_' + odooId;
+                const turnoData = localStorage.getItem(key);
+                if (turnoData) {
+                    try {
+                        const turno = JSON.parse(turnoData);
+                        return turno.ID || turno.id;
+                    } catch (e) {}
+                }
+            }
+        }
+        
+        // 3. Fallback: buscar cualquier turno
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('umo_turno_')) {
+                try {
+                    const turno = JSON.parse(localStorage.getItem(key));
+                    if (turno && (turno.ID || turno.id)) {
+                        return turno.ID || turno.id;
+                    }
+                } catch (e) {}
+            }
+        }
+        
+        return null;
+    },
+
     // Abrir modal de corte
-    async abrir(turnoId) {
-        this.turnoId = turnoId || window.turnoActual?.ID || localStorage.getItem('turnoId');
+    async abrir() {
+        this.turnoId = this.getTurnoId();
         
         if (!this.turnoId) {
-            Swal.fire('Error', 'No hay turno activo', 'error');
+            mostrarToast('No hay turno activo', 'error');
             return;
         }
 
-        Swal.fire({ title: 'Cargando corte...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        console.log('📊 Abriendo corte para turno:', this.turnoId);
+        this.mostrarLoading();
 
         try {
             const response = await fetch(`${CONFIG.API_URL}/api/turnos/${this.turnoId}/corte`);
             const data = await response.json();
 
-            if (!data.success) throw new Error(data.error);
+            console.log('📦 Datos corte:', data);
+
+            if (!data.success) {
+                throw new Error(data.error || 'Error al cargar corte');
+            }
 
             this.datos = data;
-            Swal.close();
             this.renderModal();
+
         } catch (error) {
-            Swal.fire('Error', error.message, 'error');
+            console.error('❌ Error cargando corte:', error);
+            mostrarToast('Error: ' + error.message, 'error');
+            this.cerrar();
         }
     },
 
-    // Render del modal
+    // Mostrar loading
+    mostrarLoading() {
+        document.getElementById('modal-corte')?.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'modal-corte';
+        modal.className = 'modal-overlay active';
+        modal.innerHTML = `
+            <div class="modal modal-xl">
+                <div class="modal-header">
+                    <h3><i class="fas fa-cash-register"></i> Corte de Turno</h3>
+                    <button class="btn-close" onclick="Corte.cerrar()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body" style="text-align:center;padding:60px;">
+                    <div class="loader"></div>
+                    <p style="margin-top:20px;color:#666;">Calculando corte...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    // Render del modal completo
     renderModal() {
         const d = this.datos;
+        const modal = document.getElementById('modal-corte');
+        if (!modal) return;
         
-        const modalHTML = `
-        <div id="modal-corte" class="modal-overlay active">
+        modal.innerHTML = `
             <div class="modal modal-xl">
                 <div class="modal-header">
                     <h3><i class="fas fa-cash-register"></i> Corte de Turno</h3>
@@ -49,7 +118,7 @@ const Corte = {
                         <span><strong>Turno:</strong> ${d.turno.id}</span>
                         <span><strong>Usuario:</strong> ${d.turno.usuario}</span>
                         <span><strong>Sucursal:</strong> ${d.turno.sucursal}</span>
-                        <span><strong>Apertura:</strong> ${d.turno.horaApertura}</span>
+                        <span><strong>Apertura:</strong> ${d.turno.horaApertura || '-'}</span>
                     </div>
 
                     <div class="corte-grid">
@@ -114,56 +183,23 @@ const Corte = {
                                 <div class="conteo-section">
                                     <h5>Monedas</h5>
                                     <div class="conteo-grid">
-                                        <div class="conteo-item">
-                                            <label>$1</label>
-                                            <input type="number" id="monedas1" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$2</label>
-                                            <input type="number" id="monedas2" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$5</label>
-                                            <input type="number" id="monedas5" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$10</label>
-                                            <input type="number" id="monedas10" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$20</label>
-                                            <input type="number" id="monedas20" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
+                                        <div class="conteo-item"><label>$1</label><input type="number" id="monedas1" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$2</label><input type="number" id="monedas2" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$5</label><input type="number" id="monedas5" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$10</label><input type="number" id="monedas10" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$20</label><input type="number" id="monedas20" value="0" min="0" oninput="Corte.calcularTotal()"></div>
                                     </div>
                                 </div>
 
                                 <div class="conteo-section">
                                     <h5>Billetes</h5>
                                     <div class="conteo-grid">
-                                        <div class="conteo-item">
-                                            <label>$20</label>
-                                            <input type="number" id="billetes20" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$50</label>
-                                            <input type="number" id="billetes50" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$100</label>
-                                            <input type="number" id="billetes100" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$200</label>
-                                            <input type="number" id="billetes200" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$500</label>
-                                            <input type="number" id="billetes500" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
-                                        <div class="conteo-item">
-                                            <label>$1000</label>
-                                            <input type="number" id="billetes1000" value="0" min="0" onchange="Corte.calcularTotal()">
-                                        </div>
+                                        <div class="conteo-item"><label>$20</label><input type="number" id="billetes20" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$50</label><input type="number" id="billetes50" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$100</label><input type="number" id="billetes100" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$200</label><input type="number" id="billetes200" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$500</label><input type="number" id="billetes500" value="0" min="0" oninput="Corte.calcularTotal()"></div>
+                                        <div class="conteo-item"><label>$1000</label><input type="number" id="billetes1000" value="0" min="0" oninput="Corte.calcularTotal()"></div>
                                     </div>
                                 </div>
 
@@ -171,7 +207,7 @@ const Corte = {
                                     <span>Total Contado MXN:</span>
                                     <span id="totalContadoMXN" class="big">$0.00</span>
                                 </div>
-                                <div class="conteo-diferencia" id="diferenciaMXN">
+                                <div class="conteo-diferencia ok" id="diferenciaMXN">
                                     <span>Diferencia:</span>
                                     <span id="difMXN">$0.00</span>
                                 </div>
@@ -182,17 +218,17 @@ const Corte = {
                                 <div class="conteo-grid-3">
                                     <div class="conteo-item">
                                         <label>USD 💵</label>
-                                        <input type="number" id="conteoUSD" value="0" min="0" step="0.01" onchange="Corte.calcularTotal()">
+                                        <input type="number" id="conteoUSD" value="0" min="0" step="0.01" oninput="Corte.calcularTotal()">
                                         <small>Esperado: $${d.esperado.usd.toFixed(2)}</small>
                                     </div>
                                     <div class="conteo-item">
                                         <label>CAD 🍁</label>
-                                        <input type="number" id="conteoCAD" value="0" min="0" step="0.01" onchange="Corte.calcularTotal()">
+                                        <input type="number" id="conteoCAD" value="0" min="0" step="0.01" oninput="Corte.calcularTotal()">
                                         <small>Esperado: $${d.esperado.cad.toFixed(2)}</small>
                                     </div>
                                     <div class="conteo-item">
                                         <label>EUR 🇪🇺</label>
-                                        <input type="number" id="conteoEUR" value="0" min="0" step="0.01" onchange="Corte.calcularTotal()">
+                                        <input type="number" id="conteoEUR" value="0" min="0" step="0.01" oninput="Corte.calcularTotal()">
                                         <small>Esperado: €${d.esperado.eur.toFixed(2)}</small>
                                     </div>
                                 </div>
@@ -203,27 +239,27 @@ const Corte = {
                                 <div class="conteo-grid-2">
                                     <div class="conteo-item">
                                         <label>BBVA Nacional</label>
-                                        <input type="number" id="bbvaNacional" value="0" min="0" step="0.01">
+                                        <input type="number" id="corteBbvaNacional" value="0" min="0" step="0.01">
                                         <small>Sistema: $${d.pagos.bbvaNacional.toFixed(2)}</small>
                                     </div>
                                     <div class="conteo-item">
                                         <label>BBVA Internacional</label>
-                                        <input type="number" id="bbvaInternacional" value="0" min="0" step="0.01">
+                                        <input type="number" id="corteBbvaInternacional" value="0" min="0" step="0.01">
                                         <small>Sistema: $${d.pagos.bbvaInternacional.toFixed(2)}</small>
                                     </div>
                                     <div class="conteo-item">
                                         <label>Clip Nacional</label>
-                                        <input type="number" id="clipNacional" value="0" min="0" step="0.01">
+                                        <input type="number" id="corteClipNacional" value="0" min="0" step="0.01">
                                         <small>Sistema: $${d.pagos.clipNacional.toFixed(2)}</small>
                                     </div>
                                     <div class="conteo-item">
                                         <label>Clip Internacional</label>
-                                        <input type="number" id="clipInternacional" value="0" min="0" step="0.01">
+                                        <input type="number" id="corteClipInternacional" value="0" min="0" step="0.01">
                                         <small>Sistema: $${d.pagos.clipInternacional.toFixed(2)}</small>
                                     </div>
                                     <div class="conteo-item full">
                                         <label>Transferencia</label>
-                                        <input type="number" id="transferencia" value="0" min="0" step="0.01">
+                                        <input type="number" id="corteTransferencia" value="0" min="0" step="0.01">
                                         <small>Sistema: $${d.pagos.transferencia.toFixed(2)}</small>
                                     </div>
                                 </div>
@@ -231,90 +267,84 @@ const Corte = {
 
                             <div class="corte-card">
                                 <h4><i class="fas fa-comment"></i> Observaciones</h4>
-                                <textarea id="observaciones" rows="3" placeholder="Notas del corte..."></textarea>
+                                <textarea id="corteObservaciones" rows="3" placeholder="Notas del corte..."></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" onclick="Corte.cerrar()">Cancelar</button>
-                    <button class="btn btn-primary" onclick="Corte.guardar()">
+                    <button class="btn btn-warning" onclick="Corte.solicitarRecalcular()" style="background:#ff9800;color:white;">
+                        <i class="fas fa-redo"></i> Recalcular
+                    </button>
+                    <button class="btn btn-success" onclick="Corte.guardar()">
                         <i class="fas fa-save"></i> Cerrar Turno
                     </button>
                 </div>
             </div>
-        </div>`;
+        `;
 
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
         this.calcularTotal();
     },
 
     // Calcular total contado
     calcularTotal() {
-        const monedas1 = parseInt(document.getElementById('monedas1')?.value) || 0;
-        const monedas2 = parseInt(document.getElementById('monedas2')?.value) || 0;
-        const monedas5 = parseInt(document.getElementById('monedas5')?.value) || 0;
-        const monedas10 = parseInt(document.getElementById('monedas10')?.value) || 0;
-        const monedas20 = parseInt(document.getElementById('monedas20')?.value) || 0;
-        const billetes20 = parseInt(document.getElementById('billetes20')?.value) || 0;
-        const billetes50 = parseInt(document.getElementById('billetes50')?.value) || 0;
-        const billetes100 = parseInt(document.getElementById('billetes100')?.value) || 0;
-        const billetes200 = parseInt(document.getElementById('billetes200')?.value) || 0;
-        const billetes500 = parseInt(document.getElementById('billetes500')?.value) || 0;
-        const billetes1000 = parseInt(document.getElementById('billetes1000')?.value) || 0;
+        const v = id => parseInt(document.getElementById(id)?.value) || 0;
+        
+        const total = v('monedas1') * 1 + v('monedas2') * 2 + v('monedas5') * 5 + 
+                      v('monedas10') * 10 + v('monedas20') * 20 +
+                      v('billetes20') * 20 + v('billetes50') * 50 + v('billetes100') * 100 + 
+                      v('billetes200') * 200 + v('billetes500') * 500 + v('billetes1000') * 1000;
 
-        const total = monedas1 * 1 + monedas2 * 2 + monedas5 * 5 + monedas10 * 10 + monedas20 * 20 +
-                      billetes20 * 20 + billetes50 * 50 + billetes100 * 100 + billetes200 * 200 +
-                      billetes500 * 500 + billetes1000 * 1000;
+        const totalEl = document.getElementById('totalContadoMXN');
+        if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
 
-        document.getElementById('totalContadoMXN').textContent = '$' + total.toFixed(2);
+        if (this.datos) {
+            const esperado = this.datos.esperado.efectivoMXN;
+            const diferencia = total - esperado;
+            const difEl = document.getElementById('difMXN');
+            const difContainer = document.getElementById('diferenciaMXN');
 
-        const esperado = this.datos.esperado.efectivoMXN;
-        const diferencia = total - esperado;
-        const difEl = document.getElementById('difMXN');
-        const difContainer = document.getElementById('diferenciaMXN');
-
-        difEl.textContent = (diferencia >= 0 ? '+' : '') + '$' + diferencia.toFixed(2);
-        difContainer.className = 'conteo-diferencia ' + (diferencia === 0 ? 'ok' : diferencia > 0 ? 'sobrante' : 'faltante');
+            if (difEl) difEl.textContent = (diferencia >= 0 ? '+' : '') + '$' + diferencia.toFixed(2);
+            if (difContainer) {
+                difContainer.className = 'conteo-diferencia ' + 
+                    (Math.abs(diferencia) < 0.01 ? 'ok' : diferencia > 0 ? 'sobrante' : 'faltante');
+            }
+        }
     },
 
     // Guardar corte
     async guardar() {
-        const resultado = await Swal.fire({
-            title: '¿Cerrar turno?',
-            text: 'Esta acción no se puede deshacer',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, cerrar',
-            cancelButtonText: 'Cancelar'
-        });
+        if (!confirm('¿Estás seguro de cerrar el turno?\n\nEsta acción no se puede deshacer.')) {
+            return;
+        }
 
-        if (!resultado.isConfirmed) return;
-
-        Swal.fire({ title: 'Guardando corte...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        mostrarToast('Guardando corte...', 'info');
 
         try {
+            const v = id => document.getElementById(id)?.value || 0;
+            
             const payload = {
-                monedas1: document.getElementById('monedas1').value,
-                monedas2: document.getElementById('monedas2').value,
-                monedas5: document.getElementById('monedas5').value,
-                monedas10: document.getElementById('monedas10').value,
-                monedas20: document.getElementById('monedas20').value,
-                billetes20: document.getElementById('billetes20').value,
-                billetes50: document.getElementById('billetes50').value,
-                billetes100: document.getElementById('billetes100').value,
-                billetes200: document.getElementById('billetes200').value,
-                billetes500: document.getElementById('billetes500').value,
-                billetes1000: document.getElementById('billetes1000').value,
-                conteoUSD: document.getElementById('conteoUSD').value,
-                conteoCAD: document.getElementById('conteoCAD').value,
-                conteoEUR: document.getElementById('conteoEUR').value,
-                bbvaNacional: document.getElementById('bbvaNacional').value,
-                bbvaInternacional: document.getElementById('bbvaInternacional').value,
-                clipNacional: document.getElementById('clipNacional').value,
-                clipInternacional: document.getElementById('clipInternacional').value,
-                transferencia: document.getElementById('transferencia').value,
-                observaciones: document.getElementById('observaciones').value,
+                monedas1: v('monedas1'),
+                monedas2: v('monedas2'),
+                monedas5: v('monedas5'),
+                monedas10: v('monedas10'),
+                monedas20: v('monedas20'),
+                billetes20: v('billetes20'),
+                billetes50: v('billetes50'),
+                billetes100: v('billetes100'),
+                billetes200: v('billetes200'),
+                billetes500: v('billetes500'),
+                billetes1000: v('billetes1000'),
+                conteoUSD: v('conteoUSD'),
+                conteoCAD: v('conteoCAD'),
+                conteoEUR: v('conteoEUR'),
+                bbvaNacional: v('corteBbvaNacional'),
+                bbvaInternacional: v('corteBbvaInternacional'),
+                clipNacional: v('corteClipNacional'),
+                clipInternacional: v('corteClipInternacional'),
+                transferencia: v('corteTransferencia'),
+                observaciones: document.getElementById('corteObservaciones')?.value || '',
                 ventasBrutas: this.datos.ventas.brutas,
                 descuentos: this.datos.ventas.descuentos,
                 cancelaciones: this.datos.ventas.cancelaciones,
@@ -343,28 +373,76 @@ const Corte = {
             });
 
             const data = await response.json();
-
             if (!data.success) throw new Error(data.error);
 
-            await Swal.fire({
-                title: '¡Turno cerrado!',
-                html: `
-                    <p>Total contado: <strong>$${data.resumen.totalContado.toFixed(2)}</strong></p>
-                    <p>Esperado: <strong>$${data.resumen.esperado.toFixed(2)}</strong></p>
-                    <p>Diferencia: <strong class="${data.resumen.diferencia >= 0 ? 'text-success' : 'text-danger'}">$${data.resumen.diferencia.toFixed(2)}</strong></p>
-                `,
-                icon: 'success'
-            });
-
+            // Mostrar resumen
+            alert(`✅ TURNO CERRADO\n\nTotal contado: $${data.resumen.totalContado.toFixed(2)}\nEsperado: $${data.resumen.esperado.toFixed(2)}\nDiferencia: $${data.resumen.diferencia.toFixed(2)}`);
+            
+            mostrarToast('Turno cerrado exitosamente', 'success');
             this.cerrar();
             
-            // Limpiar turno y redirigir a login
-            localStorage.removeItem('turnoId');
-            localStorage.removeItem('turnoActivo');
-            window.location.href = 'index.html';
+            // Limpiar turno local
+            if (typeof Turno !== 'undefined') {
+                Turno.limpiar();
+            }
+            
+            // Redirigir a pantalla de turno
+            setTimeout(() => {
+                if (typeof mostrarPantallaTurno === 'function') {
+                    mostrarPantallaTurno();
+                } else {
+                    location.reload();
+                }
+            }, 1000);
 
         } catch (error) {
-            Swal.fire('Error', error.message, 'error');
+            console.error('❌ Error guardando corte:', error);
+            mostrarToast('Error: ' + error.message, 'error');
+        }
+    },
+
+    // Solicitar recalcular
+    solicitarRecalcular() {
+        document.getElementById('recalcular-usuario').value = '';
+        document.getElementById('recalcular-pin').value = '';
+        document.getElementById('modal-recalcular').classList.add('active');
+    },
+
+    // Ejecutar recalcular
+    async ejecutarRecalcular() {
+        const usuarioId = document.getElementById('recalcular-usuario')?.value?.trim();
+        const pin = document.getElementById('recalcular-pin')?.value?.trim();
+
+        if (!usuarioId || !pin) {
+            mostrarToast('Ingresa ID y PIN', 'error');
+            return;
+        }
+
+        mostrarToast('Verificando autorización...', 'info');
+
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/api/turnos/${this.turnoId}/recalcular`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuarioId, pin })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                mostrarToast(data.error || 'No autorizado', 'error');
+                return;
+            }
+
+            cerrarModal('modal-recalcular');
+            mostrarToast(`Turno reabierto por ${data.autorizadoPor}`, 'success');
+            
+            // Recargar el corte
+            this.abrir();
+
+        } catch (error) {
+            console.error('❌ Error recalcular:', error);
+            mostrarToast('Error: ' + error.message, 'error');
         }
     },
 
@@ -374,7 +452,7 @@ const Corte = {
     }
 };
 
-// Función global para abrir corte
-function abrirCorte(turnoId) {
-    Corte.abrir(turnoId);
+// Función global
+function abrirCorte() {
+    Corte.abrir();
 }
